@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logística — Medistock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <nav class="sidebar">
+            <div class="sidebar-logo">MEDI<span>STOCK</span></div>
+            <div class="sidebar-section">Logística</div>
+            <div class="sidebar-nav">
+                <div class="nav-item active">
+                    <span class="icon">📦</span> Inventario
+                </div>
+                <div class="nav-item" onclick="window.location.href='ejecutivo.html'">
+                    <span class="icon">📊</span> Dashboard
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="user-avatar" id="user-avatar">L</div>
+                    <div class="user-info">
+                        <div class="name" id="user-name">Logística</div>
+                        <div class="role">Operador</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn btn-outline btn-sm" style="width: 100%; margin-top: 0.75rem;">
+                    Cerrar sesión
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <div class="page-title">Control de Inventario</div>
+                    <div class="page-subtitle">Gestión de stock por producto y sucursal</div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <div id="alerta-critico" style="display:none; background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); padding: 0.5rem 1rem; border-radius: var(--radius); font-size: 0.8rem; font-weight: 600;">
+                        ⚠️ <span id="alerta-count">0</span> producto(s) en stock crítico
+                    </div>
+                    <button class="btn btn-outline" onclick="cargarInventario()">↻ Actualizar</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <input type="text" id="buscador" placeholder="🔍 Buscar producto..."
+                    style="flex: 1; min-width: 200px; max-width: 300px; padding: 0.65rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 0.875rem; outline: none;">
+                <select id="filtro-estado" class="btn btn-outline">
+                    <option value="">Todos los estados</option>
+                    <option value="critico">Solo críticos</option>
+                    <option value="normal">Solo normales</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Sucursal</th>
+                                <th>Disponible</th>
+                                <th>Stock Mínimo</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-stock">
+                            <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal-stock" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:var(--radius); padding:2rem; max-width:400px; width:90%; box-shadow:var(--shadow-lg);">
+            <h3 style="margin-bottom:0.5rem;" id="modal-titulo">Actualizar Stock</h3>
+            <p id="modal-desc" style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;"></p>
+            <div class="form-group">
+                <label>Nueva cantidad disponible</label>
+                <input type="number" id="modal-cantidad" min="0" placeholder="0">
+            </div>
+            <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+                <button id="modal-cancel" class="btn btn-outline" style="flex:1;">Cancelar</button>
+                <button id="modal-confirm" class="btn btn-primary" style="flex:1;">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+        import { requireAuth, cerrarSesion, showToast } from './auth.js';
+
+        const auth = await requireAuth([1, 2, 3]);
+        if (!auth) throw new Error();
+
+        window.logout = () => cerrarSesion();
+
+        const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
+        document.getElementById('user-name').textContent = nombre;
+        document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
+
+        let todosItems = [];
+        let itemSeleccionado = null;
+
+        window.cargarInventario = async function() {
+            const tabla = document.getElementById('tabla-stock');
+            tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Cargando...</td></tr>`;
+
+            const { data, error } = await supabase
+                .from('inventario_detalle')
+                .select(`
+                    id_stock,
+                    cantidad_disponible,
+                    stock_critico,
+                    productos ( id_producto, nombre ),
+                    sucursales ( nombre )
+                `);
+
+            if (error || !data) {
+                tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--danger);">Error: ${error?.message || 'sin datos'}</td></tr>`;
+                return;
+            }
+
+            todosItems = data;
+
+            const criticos = data.filter(i => i.cantidad_disponible <= i.stock_critico).length;
+            const alertaEl = document.getElementById('alerta-critico');
+            alertaEl.style.display = criticos > 0 ? 'flex' : 'none';
+            document.getElementById('alerta-count').textContent = criticos;
+
+            renderTabla(data);
+        }
+
+        function renderTabla(items) {
+            const tabla = document.getElementById('tabla-stock');
+            if (!items || items.length === 0) {
+                tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No hay registros.</td></tr>`;
+                return;
+            }
+
+            tabla.innerHTML = items.map(item => {
+                const esCritico = item.cantidad_disponible <= item.stock_critico;
+                const nombreProd = (item.productos?.nombre || '—').replace(/'/g, "\\'");
+                return `<tr>
+                    <td><strong>${item.productos?.nombre || '—'}</strong></td>
+                    <td style="color:var(--text-muted);">${item.sucursales?.nombre || '—'}</td>
+                    <td><strong style="color:${esCritico ? 'var(--danger)' : 'var(--text)'};">${item.cantidad_disponible}</strong></td>
+                    <td style="color:var(--text-muted);">${item.stock_critico}</td>
+                    <td>${esCritico
+                        ? '<span class="badge badge-danger">⚠ CRÍTICO</span>'
+                        : '<span class="badge badge-success">Normal</span>'
+                    }</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm"
+                            onclick="abrirModal(${item.id_stock}, '${nombreProd}', ${item.cantidad_disponible})">
+                            Actualizar
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        document.getElementById('buscador').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
+
+        function aplicarFiltros() {
+            const q = document.getElementById('buscador').value.toLowerCase();
+            const estado = document.getElementById('filtro-estado').value;
+            const resultado = todosItems.filter(i => {
+                const nom = (i.productos?.nombre || '').toLowerCase();
+                const matchQ = nom.includes(q);
+                const matchEstado = !estado
+                    || (estado === 'critico' && i.cantidad_disponible <= i.stock_critico)
+                    || (estado === 'normal' && i.cantidad_disponible > i.stock_critico);
+                return matchQ && matchEstado;
+            });
+            renderTabla(resultado);
+        }
+
+        const modal = document.getElementById('modal-stock');
+        const inputCantidad = document.getElementById('modal-cantidad');
+
+        window.abrirModal = function(idStock, nombreProducto, cantidadActual) {
+            itemSeleccionado = idStock;
+            document.getElementById('modal-titulo').textContent = `Actualizar: ${nombreProducto}`;
+            document.getElementById('modal-desc').textContent = `Cantidad actual: ${cantidadActual} unidades`;
+            inputCantidad.value = cantidadActual;
+            modal.style.display = 'flex';
+            inputCantidad.focus();
+        }
+
+        document.getElementById('modal-cancel').addEventListener('click', () => {
+            modal.style.display = 'none';
+            itemSeleccionado = null;
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                itemSeleccionado = null;
+            }
+        });
+
+        document.getElementById('modal-confirm').addEventListener('click', async () => {
+            const nuevaCantidad = parseInt(inputCantidad.value);
+            if (isNaN(nuevaCantidad) || nuevaCantidad < 0) {
+                showToast('Ingresa una cantidad válida', 'error');
+                return;
+            }
+
+            const { error } = await supabase
+                .from('inventario_detalle')
+                .update({ cantidad_disponible: nuevaCantidad })
+                .eq('id_stock', itemSeleccionado);
+
+            if (error) {
+                showToast('Error: ' + error.message, 'error');
+            } else {
+                showToast('Stock actualizado correctamente', 'success');
+                modal.style.display = 'none';
+                itemSeleccionado = null;
+                cargarInventario();
+            }
+        });
+
+        cargarInventario();
+    </script>
+</body>
+</html>
