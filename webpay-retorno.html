@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado del Pago — Medistock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
+        <div class="card" style="max-width:480px; width:100%; text-align:center;">
+            <div class="card-body" style="padding:2.5rem;">
+                <div id="resultado-icono" style="font-size:4rem; margin-bottom:1rem;">⏳</div>
+                <h2 id="resultado-titulo" style="margin-bottom:0.5rem;">Verificando pago...</h2>
+                <p id="resultado-desc" style="color:var(--text-muted); margin-bottom:1.5rem;"></p>
+                <div id="resultado-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1rem; margin-bottom:1.5rem; display:none; text-align:left;">
+                </div>
+                <div id="resultado-acciones"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        const SUPABASE_URL = 'https://ikeebacmdyobisrcysvr.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_Yb5P2e5VTqikB0H6cifwoA_0nIOZh6S';
+
+        const params = new URLSearchParams(window.location.search);
+        const tokenWs = params.get('token_ws');
+        const tbkToken = params.get('TBK_TOKEN'); // pago cancelado
+
+        const iconoEl = document.getElementById('resultado-icono');
+        const tituloEl = document.getElementById('resultado-titulo');
+        const descEl = document.getElementById('resultado-desc');
+        const detalleEl = document.getElementById('resultado-detalle');
+        const accionesEl = document.getElementById('resultado-acciones');
+
+        function mostrarError(msg) {
+            iconoEl.textContent = '❌';
+            tituloEl.textContent = 'Pago cancelado o fallido';
+            descEl.textContent = msg;
+            accionesEl.innerHTML = `<a href="checkout.html" class="btn btn-primary" style="display:inline-flex;">Volver al checkout</a>`;
+        }
+
+        // Pago cancelado por el usuario
+        if (tbkToken && !tokenWs) {
+            mostrarError('Cancelaste el pago en Webpay. Tu pedido no fue procesado.');
+            // No limpiar carrito porque el pago no se realizó
+        }
+        // Pago completado (exitoso o rechazado)
+        else if (tokenWs) {
+            try {
+                // Confirmar transacción con Transbank
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/transbank-webpay`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({ action: 'confirm', token: tokenWs }),
+                });
+
+                const tbkData = await response.json();
+
+                // Pago aprobado (response_code === 0)
+                if (tbkData.response_code === 0) {
+                    iconoEl.textContent = '✅';
+                    tituloEl.textContent = '¡Pago exitoso!';
+                    descEl.textContent = 'Tu pedido ha sido registrado correctamente.';
+
+                    // Recuperar datos del pedido
+                    const orderData = JSON.parse(sessionStorage.getItem('webpay_order') || '{}');
+                    const carrito = orderData.carrito || [];
+                    const total = orderData.total || tbkData.amount;
+
+                    // Mostrar detalle de la transacción
+                    detalleEl.style.display = 'block';
+                    detalleEl.innerHTML = `
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.875rem;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Orden Webpay</span>
+                                <strong>${tbkData.buy_order}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Autorización</span>
+                                <strong>${tbkData.authorization_code}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Tarjeta</span>
+                                <strong>**** **** **** ${tbkData.card_detail?.card_number || '****'}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Total pagado</span>
+                                <strong style="color:var(--success);">$${Number(total).toLocaleString('es-CL')}</strong>
+                            </div>
+                        </div>`;
+
+                    // Registrar pedido en Supabase
+                    const { data: usuarioData } = await supabase
+                        .from('usuarios')
+                        .select('id_usuario')
+                        .eq('email', orderData.email)
+                        .single();
+
+                    const { data: pedido } = await supabase
+                        .from('pedidos')
+                        .insert([{
+                            id_cliente: usuarioData?.id_usuario || null,
+                            id_canal: 1,
+                            id_sucursal_despacho: 1,
+                            estado_pedido: 'Pagado',
+                            total_pago: total,
+                            metodo_pago: 'webpay',
+                        }])
+                        .select()
+                        .single();
+
+                    if (pedido) {
+                        // Registrar detalles
+                        await supabase.from('detalle_pedido').insert(
+                            carrito.map(item => ({
+                                id_pedido: pedido.id_pedido,
+                                id_producto: item.id_producto,
+                                cantidad: item.cantidad,
+                                precio_unitario: item.precio_venta_actual,
+                            }))
+                        );
+
+                        // Descontar stock
+                        for (const item of carrito) {
+                            await supabase.rpc('descontar_stock', {
+                                p_producto_id: item.id_producto,
+                                p_cantidad: item.cantidad,
+                            }).catch(e => console.warn('Stock:', e.message));
+                        }
+
+                        tituloEl.textContent = `¡Pago exitoso! Orden #${String(pedido.id_pedido).padStart(5,'0')}`;
+                    }
+
+                    // Limpiar carrito
+                    localStorage.removeItem('ms_carrito');
+                    sessionStorage.removeItem('webpay_order');
+
+                    accionesEl.innerHTML = `
+                        <a href="catalogo.html" class="btn btn-primary" style="display:inline-flex;">
+                            Seguir comprando
+                        </a>`;
+
+                } else {
+                    // Pago rechazado
+                    mostrarError(`Pago rechazado por el banco. Código: ${tbkData.response_code}. Intenta con otra tarjeta.`);
+                }
+
+            } catch (err) {
+                mostrarError('Error al verificar el pago. Contacta al soporte.');
+                console.error(err);
+            }
+        } else {
+            mostrarError('No se recibió información del pago.');
+        }
+    </script>
+</body>
+</html>

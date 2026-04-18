@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Ejecutivo — Medistock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">MEDI<span>STOCK</span></div>
+            <div class="sidebar-section">Panel</div>
+            <div class="sidebar-nav">
+                <div class="nav-item active">
+                    <span class="icon">📊</span> Resumen
+                </div>
+                <div class="nav-item" onclick="window.location.href='terminal-logistica.html'">
+                    <span class="icon">📦</span> Inventario
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="user-avatar" id="user-avatar">E</div>
+                    <div class="user-info">
+                        <div class="name" id="user-name">Ejecutivo</div>
+                        <div class="role">Administrador</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn btn-outline btn-sm" style="width: 100%; margin-top: 0.75rem;">
+                    Cerrar sesión
+                </button>
+            </div>
+        </nav>
+
+        <!-- Contenido -->
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <div class="page-title">Panel de Control</div>
+                    <div class="page-subtitle" id="fecha-actual">Cargando...</div>
+                </div>
+                <button class="btn btn-outline" onclick="cargarDashboard()">↻ Actualizar</button>
+            </div>
+
+            <!-- KPIs -->
+            <div class="stats-grid">
+                <div class="stat-card green">
+                    <div class="stat-label">Ingresos Totales</div>
+                    <div class="stat-value" id="total-ventas">$—</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-label">Órdenes Totales</div>
+                    <div class="stat-value" id="total-ordenes">—</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-label">Órdenes Pendientes</div>
+                    <div class="stat-value" id="ordenes-pendientes">—</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-label">Ticket Promedio</div>
+                    <div class="stat-value" id="ticket-promedio">$—</div>
+                </div>
+            </div>
+
+            <!-- Tabla de pedidos -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Últimas Transacciones</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="filtro-estado" class="btn btn-outline btn-sm" style="cursor: pointer;">
+                            <option value="">Todos los estados</option>
+                            <option value="Pagado">Pagado</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Despachado">Despachado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Orden</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Método de Pago</th>
+                                <th>Monto</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-pedidos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+        import { requireAuth, cerrarSesion } from './auth.js';
+
+        // Solo Admins (1) y Ejecutivos (3)
+        const auth = await requireAuth([1, 3]);
+        if (!auth) throw new Error();
+
+        window.logout = () => cerrarSesion();
+
+        const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
+        document.getElementById('user-name').textContent = nombre;
+        document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
+        document.getElementById('fecha-actual').textContent =
+            new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        let todosPedidos = [];
+
+        window.cargarDashboard = async function() {
+            const { data: pedidos, error } = await supabase
+                .from('pedidos')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error || !pedidos) return;
+            todosPedidos = pedidos;
+
+            // KPIs
+            const total = pedidos.reduce((sum, p) => sum + Number(p.total_pago), 0);
+            const pendientes = pedidos.filter(p => p.estado_pedido === 'Pendiente').length;
+            const ticket = pedidos.length > 0 ? Math.round(total / pedidos.length) : 0;
+
+            document.getElementById('total-ventas').textContent = `$${total.toLocaleString('es-CL')}`;
+            document.getElementById('total-ordenes').textContent = pedidos.length;
+            document.getElementById('ordenes-pendientes').textContent = pendientes;
+            document.getElementById('ticket-promedio').textContent = `$${ticket.toLocaleString('es-CL')}`;
+
+            renderTabla(pedidos);
+        }
+
+        function renderTabla(pedidos) {
+            const estadoBadges = {
+                'Pagado':     'badge-success',
+                'Pendiente':  'badge-warning',
+                'Despachado': 'badge-info',
+                'Cancelado':  'badge-danger',
+            };
+
+            const metodoPagoLabels = {
+                debito: 'Débito (Webpay)',
+                credito: 'Tarjeta Crédito',
+                transferencia: 'Transferencia',
+            };
+
+            document.getElementById('lista-pedidos').innerHTML = pedidos.map(p => {
+                const badgeClass = estadoBadges[p.estado_pedido] || 'badge-info';
+                const fecha = p.created_at ? new Date(p.created_at).toLocaleDateString('es-CL') : '—';
+                const metodo = metodoPagoLabels[p.metodo_pago] || p.metodo_pago || '—';
+
+                return `
+                    <tr>
+                        <td><strong>#${String(p.id_pedido).padStart(5, '0')}</strong></td>
+                        <td style="color: var(--text-muted);">${fecha}</td>
+                        <td><span class="badge ${badgeClass}">${p.estado_pedido}</span></td>
+                        <td style="color: var(--text-muted);">${metodo}</td>
+                        <td><strong>$${Number(p.total_pago).toLocaleString('es-CL')}</strong></td>
+                        <td>
+                            <select onchange="cambiarEstado(${p.id_pedido}, this.value)" class="btn btn-outline btn-sm" style="cursor:pointer;">
+                                <option value="">Cambiar estado</option>
+                                <option value="Pagado">Pagado</option>
+                                <option value="Despachado">Despachado</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </td>
+                    </tr>`;
+            }).join('');
+        }
+
+        // Filtro por estado
+        document.getElementById('filtro-estado').addEventListener('change', (e) => {
+            const filtro = e.target.value;
+            renderTabla(filtro ? todosPedidos.filter(p => p.estado_pedido === filtro) : todosPedidos);
+        });
+
+        // Cambiar estado de pedido
+        window.cambiarEstado = async (idPedido, nuevoEstado) => {
+            if (!nuevoEstado) return;
+            const { error } = await supabase
+                .from('pedidos')
+                .update({ estado_pedido: nuevoEstado })
+                .eq('id_pedido', idPedido);
+
+            if (!error) {
+                cargarDashboard();
+            }
+        };
+
+        cargarDashboard();
+    </script>
+</body>
+</html>
