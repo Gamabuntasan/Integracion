@@ -5,19 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Ejecutivo — Medistock</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── TABS ── */
+        .page-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .page-tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .page-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── PRIORITY BADGE ── */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .priority-urgent { background: #fee2e2; color: #991b1b; }
+        .priority-normal  { background: #dbeafe; color: #1e40af; }
+
+        /* ── ACTION BUTTONS ── */
+        .btn-approve { background: var(--success); color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .btn-approve:hover { background: #059669; }
+        .btn-reject  { background: var(--danger);  color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .btn-reject:hover  { background: #dc2626; }
+        .btn-derive  { background: var(--warning); color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .btn-derive:hover  { background: #d97706; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
 </head>
 <body>
     <div class="app-shell">
-        <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-logo">MEDI<span>STOCK</span></div>
             <div class="sidebar-section">Panel</div>
             <div class="sidebar-nav">
                 <div class="nav-item active">
-                    <span class="icon">📊</span> Resumen
+                    <span class="icon">📊</span> Dashboard
                 </div>
                 <div class="nav-item" onclick="window.location.href='terminal-logistica.html'">
                     <span class="icon">📦</span> Inventario
+                </div>
+                <div class="nav-item" onclick="window.location.href='finanzas.html'">
+                    <span class="icon">💰</span> Finanzas
                 </div>
             </div>
             <div class="sidebar-footer">
@@ -28,48 +95,99 @@
                         <div class="role">Administrador</div>
                     </div>
                 </div>
-                <button onclick="logout()" class="btn btn-outline btn-sm" style="width: 100%; margin-top: 0.75rem;">
+                <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%; margin-top:0.75rem;">
                     Cerrar sesión
                 </button>
             </div>
         </nav>
 
-        <!-- Contenido -->
         <main class="main-content">
             <div class="page-header">
                 <div>
                     <div class="page-title">Panel de Control</div>
-                    <div class="page-subtitle" id="fecha-actual">Cargando...</div>
+                    <div class="page-subtitle" id="fecha-actual"></div>
                 </div>
                 <button class="btn btn-outline" onclick="cargarDashboard()">↻ Actualizar</button>
             </div>
 
-            <!-- KPIs -->
-            <div class="stats-grid">
-                <div class="stat-card green">
-                    <div class="stat-label">Ingresos Totales</div>
-                    <div class="stat-value" id="total-ventas">$—</div>
+            <!-- Tabs -->
+            <div class="page-tabs">
+                <button class="page-tab active" onclick="switchTab('resumen', this)">📊 Resumen</button>
+                <button class="page-tab" onclick="switchTab('aprobacion', this)">
+                    ✅ Aprobación de Pedidos
+                    <span id="badge-pendientes" style="background:var(--danger); color:white; border-radius:100px; padding:1px 7px; font-size:0.7rem; margin-left:0.5rem; display:none;">0</span>
+                </button>
+                <button class="page-tab" onclick="switchTab('transacciones', this)">📋 Transacciones</button>
+            </div>
+
+            <!-- TAB 1: RESUMEN -->
+            <div class="tab-content active" id="tab-resumen">
+                <div class="stats-grid">
+                    <div class="stat-card green">
+                        <div class="stat-label">Ingresos Totales</div>
+                        <div class="stat-value" id="total-ventas">$—</div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-label">Órdenes Totales</div>
+                        <div class="stat-value" id="total-ordenes">—</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-label">Pendientes Aprobación</div>
+                        <div class="stat-value" id="ordenes-pendientes">—</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-label">Ticket Promedio</div>
+                        <div class="stat-value" id="ticket-promedio">$—</div>
+                    </div>
                 </div>
-                <div class="stat-card blue">
-                    <div class="stat-label">Órdenes Totales</div>
-                    <div class="stat-value" id="total-ordenes">—</div>
-                </div>
-                <div class="stat-card orange">
-                    <div class="stat-label">Órdenes Pendientes</div>
-                    <div class="stat-value" id="ordenes-pendientes">—</div>
-                </div>
-                <div class="stat-card red">
-                    <div class="stat-label">Ticket Promedio</div>
-                    <div class="stat-value" id="ticket-promedio">$—</div>
+
+                <!-- Resumen por método de pago -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-top:1.25rem;">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Ventas por Método de Pago</span></div>
+                        <div class="card-body" id="ventas-metodo"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Ventas por Estado</span></div>
+                        <div class="card-body" id="ventas-estado"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabla de pedidos -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Últimas Transacciones</span>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <select id="filtro-estado" class="btn btn-outline btn-sm" style="cursor: pointer;">
+            <!-- TAB 2: APROBACIÓN -->
+            <div class="tab-content" id="tab-aprobacion">
+                <div style="margin-bottom:1rem;">
+                    <p style="color:var(--text-muted); font-size:0.875rem;">
+                        Revisa y aprueba las compras institucionales. Al aprobar, la orden se deriva automáticamente a logística para preparación.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Despacho</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-aprobacion"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: TRANSACCIONES -->
+            <div class="tab-content" id="tab-transacciones">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Últimas Transacciones</span>
+                        <select id="filtro-estado" class="btn btn-outline btn-sm" style="cursor:pointer;">
                             <option value="">Todos los estados</option>
                             <option value="Pagado">Pagado</option>
                             <option value="Pendiente">Pendiente</option>
@@ -77,36 +195,56 @@
                             <option value="Cancelado">Cancelado</option>
                         </select>
                     </div>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Orden</th>
-                                <th>Fecha</th>
-                                <th>Estado</th>
-                                <th>Método de Pago</th>
-                                <th>Monto</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-pedidos"></tbody>
-                    </table>
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Método</th>
+                                    <th>Tracking</th>
+                                    <th>Monto</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-pedidos"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Modal de aprobación -->
+    <div class="modal-overlay" id="modal-aprobacion">
+        <div class="modal-box">
+            <h3 style="margin-bottom:0.5rem;" id="modal-titulo">Aprobar Pedido</h3>
+            <p id="modal-desc" style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;"></p>
+
+            <div id="modal-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1rem; margin-bottom:1.5rem; font-size:0.875rem;"></div>
+
+            <div class="form-group">
+                <label>Nota para logística (opcional)</label>
+                <input type="text" id="nota-logistica" placeholder="Ej: Prioridad urgente, entregar antes de las 12hrs"
+                    style="width:100%; padding:0.75rem; border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.875rem; outline:none;">
+            </div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
+                <button onclick="cerrarModal()" class="btn btn-outline" style="flex:1;">Cancelar</button>
+                <button onclick="ejecutarAccion()" class="btn btn-primary" style="flex:1;" id="modal-btn-accion">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { supabase } from './supabaseClient.js';
-        import { requireAuth, cerrarSesion } from './auth.js';
+        import { requireAuth, cerrarSesion, showToast } from './auth.js';
 
-        // Solo Admins (1) y Ejecutivos (3)
         const auth = await requireAuth([1, 3]);
         if (!auth) throw new Error();
 
         window.logout = () => cerrarSesion();
-
         const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
         document.getElementById('user-name').textContent = nombre;
         document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
@@ -114,18 +252,29 @@
             new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
         let todosPedidos = [];
+        let accionPendiente = null;
+        let pedidoPendiente = null;
 
+        // ── TABS ──
+        window.switchTab = (tab, el) => {
+            document.querySelectorAll('.page-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        };
+
+        // ── CARGAR DATOS ──
         window.cargarDashboard = async function() {
             const { data: pedidos, error } = await supabase
                 .from('pedidos')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .select('*, usuarios(nombre, apellido, email)')
+                .order('id_pedido', { ascending: false });
 
             if (error || !pedidos) return;
             todosPedidos = pedidos;
 
             // KPIs
-            const total = pedidos.reduce((sum, p) => sum + Number(p.total_pago), 0);
+            const total = pedidos.reduce((s, p) => s + Number(p.total_pago), 0);
             const pendientes = pedidos.filter(p => p.estado_pedido === 'Pendiente').length;
             const ticket = pedidos.length > 0 ? Math.round(total / pedidos.length) : 0;
 
@@ -134,10 +283,69 @@
             document.getElementById('ordenes-pendientes').textContent = pendientes;
             document.getElementById('ticket-promedio').textContent = `$${ticket.toLocaleString('es-CL')}`;
 
-            renderTabla(pedidos);
+            // Badge de pendientes
+            const badge = document.getElementById('badge-pendientes');
+            badge.textContent = pendientes;
+            badge.style.display = pendientes > 0 ? 'inline' : 'none';
+
+            // Ventas por método
+            renderVentasPorGrupo('ventas-metodo', pedidos, 'metodo_pago', {
+                webpay: '💳 Webpay',
+                transferencia: '🏦 Transferencia',
+                debito: '💳 Débito',
+                credito: '💳 Crédito',
+            });
+
+            // Ventas por estado
+            renderVentasPorGrupo('ventas-estado', pedidos, 'estado_pedido', {
+                'Pagado': '✅ Pagado',
+                'Pendiente': '⏳ Pendiente',
+                'Despachado': '🚚 Despachado',
+                'Cancelado': '❌ Cancelado',
+            });
+
+            renderTablaAprobacion(pedidos);
+            renderTablaTransacciones(pedidos);
+        };
+
+        function renderVentasPorGrupo(elId, pedidos, campo, labels) {
+            const grupos = {};
+            pedidos.forEach(p => {
+                const key = p[campo] || 'N/A';
+                if (!grupos[key]) grupos[key] = { count: 0, total: 0 };
+                grupos[key].count++;
+                grupos[key].total += Number(p.total_pago);
+            });
+
+            const total = pedidos.reduce((s, p) => s + Number(p.total_pago), 0);
+            const el = document.getElementById(elId);
+            el.innerHTML = Object.entries(grupos).map(([key, val]) => {
+                const pct = total > 0 ? Math.round(val.total / total * 100) : 0;
+                return `
+                    <div style="margin-bottom:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                            <span>${labels[key] || key}</span>
+                            <span style="font-weight:600;">$${val.total.toLocaleString('es-CL')} (${val.count})</span>
+                        </div>
+                        <div style="background:var(--border); border-radius:100px; height:6px;">
+                            <div style="background:var(--accent); width:${pct}%; height:100%; border-radius:100px; transition:width 0.5s;"></div>
+                        </div>
+                    </div>`;
+            }).join('') || '<p style="color:var(--text-muted); font-size:0.875rem;">Sin datos</p>';
         }
 
-        function renderTabla(pedidos) {
+        // ── TABLA APROBACIÓN ──
+        function renderTablaAprobacion(pedidos) {
+            const tabla = document.getElementById('tabla-aprobacion');
+            const relevantes = pedidos.filter(p =>
+                ['Pendiente', 'Pagado', 'Despachado'].includes(p.estado_pedido)
+            );
+
+            if (!relevantes.length) {
+                tabla.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No hay pedidos para revisar.</td></tr>`;
+                return;
+            }
+
             const estadoBadges = {
                 'Pagado':     'badge-success',
                 'Pendiente':  'badge-warning',
@@ -145,54 +353,186 @@
                 'Cancelado':  'badge-danger',
             };
 
-            const metodoPagoLabels = {
-                debito: 'Débito (Webpay)',
-                credito: 'Tarjeta Crédito',
-                transferencia: 'Transferencia',
-            };
-
-            document.getElementById('lista-pedidos').innerHTML = pedidos.map(p => {
-                const badgeClass = estadoBadges[p.estado_pedido] || 'badge-info';
+            tabla.innerHTML = relevantes.map(p => {
+                const cliente = p.usuarios ? `${p.usuarios.nombre} ${p.usuarios.apellido}` : '—';
                 const fecha = p.created_at ? new Date(p.created_at).toLocaleDateString('es-CL') : '—';
-                const metodo = metodoPagoLabels[p.metodo_pago] || p.metodo_pago || '—';
+                const despacho = p.tipo_despacho === 'express'
+                    ? '<span style="color:var(--warning);">⚡ Express</span>'
+                    : '📦 Normal';
+                const badge = estadoBadges[p.estado_pedido] || 'badge-info';
 
-                return `
-                    <tr>
-                        <td><strong>#${String(p.id_pedido).padStart(5, '0')}</strong></td>
-                        <td style="color: var(--text-muted);">${fecha}</td>
-                        <td><span class="badge ${badgeClass}">${p.estado_pedido}</span></td>
-                        <td style="color: var(--text-muted);">${metodo}</td>
-                        <td><strong>$${Number(p.total_pago).toLocaleString('es-CL')}</strong></td>
-                        <td>
-                            <select onchange="cambiarEstado(${p.id_pedido}, this.value)" class="btn btn-outline btn-sm" style="cursor:pointer;">
-                                <option value="">Cambiar estado</option>
-                                <option value="Pagado">Pagado</option>
-                                <option value="Despachado">Despachado</option>
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="Cancelado">Cancelado</option>
-                            </select>
-                        </td>
-                    </tr>`;
+                let acciones = '';
+                if (p.estado_pedido === 'Pendiente') {
+                    acciones = `
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn-approve" onclick="abrirModal(${p.id_pedido}, 'aprobar')">✓ Aprobar</button>
+                            <button class="btn-reject"  onclick="abrirModal(${p.id_pedido}, 'rechazar')">✕ Rechazar</button>
+                        </div>`;
+                } else if (p.estado_pedido === 'Pagado') {
+                    acciones = `<button class="btn-derive" onclick="abrirModal(${p.id_pedido}, 'derivar')">→ Derivar a Logística</button>`;
+                } else {
+                    acciones = `<span class="badge badge-info">En proceso</span>`;
+                }
+
+                return `<tr>
+                    <td><strong>#${String(p.id_pedido).padStart(5,'0')}</strong></td>
+                    <td>${cliente}</td>
+                    <td style="color:var(--text-muted);">${fecha}</td>
+                    <td>${despacho}</td>
+                    <td><strong>$${Number(p.total_pago).toLocaleString('es-CL')}</strong></td>
+                    <td><span class="badge ${badge}">${p.estado_pedido}</span></td>
+                    <td>${acciones}</td>
+                </tr>`;
             }).join('');
         }
 
-        // Filtro por estado
+        // ── TABLA TRANSACCIONES ──
+        function renderTablaTransacciones(pedidos) {
+            const estadoBadges = {
+                'Pagado':     'badge-success',
+                'Pendiente':  'badge-warning',
+                'Despachado': 'badge-info',
+                'Cancelado':  'badge-danger',
+            };
+            const metodosLabel = {
+                webpay: '💳 Webpay',
+                transferencia: '🏦 Transferencia',
+                debito: '💳 Débito',
+                credito: '💳 Crédito',
+            };
+
+            document.getElementById('lista-pedidos').innerHTML = pedidos.map(p => {
+                const badge = estadoBadges[p.estado_pedido] || 'badge-info';
+                const fecha = p.created_at ? new Date(p.created_at).toLocaleDateString('es-CL') : '—';
+                const metodo = metodosLabel[p.metodo_pago] || p.metodo_pago || '—';
+                const tracking = p.tracking_number
+                    ? `<code style="font-size:0.75rem; background:var(--surface-2); padding:2px 6px; border-radius:4px;">${p.tracking_number}</code>`
+                    : '—';
+
+                return `<tr>
+                    <td><strong>#${String(p.id_pedido).padStart(5,'0')}</strong></td>
+                    <td style="color:var(--text-muted);">${fecha}</td>
+                    <td><span class="badge ${badge}">${p.estado_pedido}</span></td>
+                    <td>${metodo}</td>
+                    <td>${tracking}</td>
+                    <td><strong>$${Number(p.total_pago).toLocaleString('es-CL')}</strong></td>
+                    <td>
+                        <select onchange="cambiarEstado(${p.id_pedido}, this.value)" class="btn btn-outline btn-sm" style="cursor:pointer;">
+                            <option value="">Cambiar estado</option>
+                            <option value="Pagado">Pagado</option>
+                            <option value="Despachado">Despachado</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // Filtro transacciones
         document.getElementById('filtro-estado').addEventListener('change', (e) => {
             const filtro = e.target.value;
-            renderTabla(filtro ? todosPedidos.filter(p => p.estado_pedido === filtro) : todosPedidos);
+            renderTablaTransacciones(filtro
+                ? todosPedidos.filter(p => p.estado_pedido === filtro)
+                : todosPedidos
+            );
         });
 
-        // Cambiar estado de pedido
+        // ── MODAL ──
+        window.abrirModal = async (idPedido, accion) => {
+            pedidoPendiente = idPedido;
+            accionPendiente = accion;
+
+            const pedido = todosPedidos.find(p => p.id_pedido === idPedido);
+            const cliente = pedido?.usuarios
+                ? `${pedido.usuarios.nombre} ${pedido.usuarios.apellido}`
+                : `#${String(idPedido).padStart(5,'0')}`;
+
+            const titulos = {
+                aprobar: '✅ Aprobar Pedido',
+                rechazar: '❌ Rechazar Pedido',
+                derivar:  '🚚 Derivar a Logística',
+            };
+            const descs = {
+                aprobar: `Estás aprobando el pedido de ${cliente} por $${Number(pedido?.total_pago || 0).toLocaleString('es-CL')}. El estado cambiará a "Pagado".`,
+                rechazar: `Estás rechazando el pedido de ${cliente}. El estado cambiará a "Cancelado".`,
+                derivar:  `Estás derivando el pedido de ${cliente} a logística. El estado cambiará a "Despachado".`,
+            };
+            const btnColors = {
+                aprobar: 'var(--success)',
+                rechazar: 'var(--danger)',
+                derivar:  'var(--warning)',
+            };
+
+            document.getElementById('modal-titulo').textContent = titulos[accion];
+            document.getElementById('modal-desc').textContent = descs[accion];
+            document.getElementById('modal-btn-accion').style.background = btnColors[accion];
+
+            // Cargar detalle del pedido
+            const { data: detalle } = await supabase
+                .from('detalle_pedido')
+                .select('cantidad, precio_unitario, productos(nombre)')
+                .eq('id_pedido', idPedido);
+
+            if (detalle?.length) {
+                document.getElementById('modal-detalle').innerHTML = detalle.map(d =>
+                    `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px solid var(--border);">
+                        <span>${d.productos?.nombre}</span>
+                        <span style="font-weight:600;">x${d.cantidad} — $${(Number(d.precio_unitario) * d.cantidad).toLocaleString('es-CL')}</span>
+                    </div>`
+                ).join('');
+            } else {
+                document.getElementById('modal-detalle').innerHTML = '<p style="color:var(--text-muted);">Sin detalle disponible</p>';
+            }
+
+            document.getElementById('modal-aprobacion').classList.add('open');
+        };
+
+        window.cerrarModal = () => {
+            document.getElementById('modal-aprobacion').classList.remove('open');
+            pedidoPendiente = null;
+            accionPendiente = null;
+        };
+
+        window.ejecutarAccion = async () => {
+            if (!pedidoPendiente || !accionPendiente) return;
+
+            const nota = document.getElementById('nota-logistica').value;
+            const estadoNuevo = {
+                aprobar: 'Pagado',
+                rechazar: 'Cancelado',
+                derivar:  'Despachado',
+            }[accionPendiente];
+
+            const { error } = await supabase
+                .from('pedidos')
+                .update({ estado_pedido: estadoNuevo })
+                .eq('id_pedido', pedidoPendiente);
+
+            if (error) {
+                showToast('Error al actualizar el pedido', 'error');
+                return;
+            }
+
+            const mensajes = {
+                aprobar: `Pedido #${String(pedidoPendiente).padStart(5,'0')} aprobado ✅`,
+                rechazar: `Pedido #${String(pedidoPendiente).padStart(5,'0')} rechazado`,
+                derivar:  `Pedido #${String(pedidoPendiente).padStart(5,'0')} derivado a logística 🚚`,
+            };
+
+            showToast(mensajes[accionPendiente], accionPendiente === 'rechazar' ? 'error' : 'success');
+            cerrarModal();
+            cargarDashboard();
+        };
+
+        // Cambiar estado directo
         window.cambiarEstado = async (idPedido, nuevoEstado) => {
             if (!nuevoEstado) return;
             const { error } = await supabase
                 .from('pedidos')
                 .update({ estado_pedido: nuevoEstado })
                 .eq('id_pedido', idPedido);
-
-            if (!error) {
-                cargarDashboard();
-            }
+            if (!error) cargarDashboard();
         };
 
         cargarDashboard();

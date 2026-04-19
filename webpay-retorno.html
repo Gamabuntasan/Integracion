@@ -8,13 +8,24 @@
 </head>
 <body>
     <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
-        <div class="card" style="max-width:480px; width:100%; text-align:center;">
+        <div class="card" style="max-width:520px; width:100%; text-align:center;">
             <div class="card-body" style="padding:2.5rem;">
                 <div id="resultado-icono" style="font-size:4rem; margin-bottom:1rem;">⏳</div>
                 <h2 id="resultado-titulo" style="margin-bottom:0.5rem;">Verificando pago...</h2>
                 <p id="resultado-desc" style="color:var(--text-muted); margin-bottom:1.5rem;"></p>
-                <div id="resultado-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1rem; margin-bottom:1.5rem; display:none; text-align:left;">
+
+                <!-- Detalle transacción -->
+                <div id="resultado-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; display:none; text-align:left;"></div>
+
+                <!-- Tracking -->
+                <div id="tracking-box" style="display:none; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:var(--radius); padding:1.25rem; margin-bottom:1.5rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">
+                        Número de seguimiento
+                    </div>
+                    <div id="tracking-number" style="font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700; color:var(--success); letter-spacing:0.1em;"></div>
+                    <div id="tracking-tipo" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;"></div>
                 </div>
+
                 <div id="resultado-acciones"></div>
             </div>
         </div>
@@ -25,15 +36,19 @@
 
         const SUPABASE_URL = 'https://ikeebacmdyobisrcysvr.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_Yb5P2e5VTqikB0H6cifwoA_0nIOZh6S';
+const MOCKAPI_URL = 'https://69e5507bce4e908a155e08e1.mockapi.io';
 
         const params = new URLSearchParams(window.location.search);
         const tokenWs = params.get('token_ws');
-        const tbkToken = params.get('TBK_TOKEN'); // pago cancelado
+        const tbkToken = params.get('TBK_TOKEN');
 
         const iconoEl = document.getElementById('resultado-icono');
         const tituloEl = document.getElementById('resultado-titulo');
         const descEl = document.getElementById('resultado-desc');
         const detalleEl = document.getElementById('resultado-detalle');
+        const trackingBox = document.getElementById('tracking-box');
+        const trackingNum = document.getElementById('tracking-number');
+        const trackingTipo = document.getElementById('tracking-tipo');
         const accionesEl = document.getElementById('resultado-acciones');
 
         function mostrarError(msg) {
@@ -43,15 +58,43 @@
             accionesEl.innerHTML = `<a href="checkout.html" class="btn btn-primary" style="display:inline-flex;">Volver al checkout</a>`;
         }
 
-        // Pago cancelado por el usuario
+        async function generarTracking(idPedido, direccion, tipo) {
+            try {
+                const num = `MS-${Date.now().toString().slice(-8)}`;
+                const estimado = tipo === 'express' ? '24 horas hábiles' : '3-5 días hábiles';
+
+                const res = await fetch(`${MOCKAPI_URL}/envios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_pedido: idPedido,
+                        tracking: num,
+                        tipo,
+                        direccion,
+                        estado: 'Pendiente de retiro',
+                        estimado,
+                        creado: new Date().toISOString(),
+                    }),
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    return { tracking: data.tracking || num, estimado };
+                }
+            } catch (e) {
+                console.warn('MockAPI no disponible');
+            }
+            const num = `MS-${Date.now().toString().slice(-8)}`;
+            return {
+                tracking: num,
+                estimado: tipo === 'express' ? '24 horas hábiles' : '3-5 días hábiles'
+            };
+        }
+
         if (tbkToken && !tokenWs) {
             mostrarError('Cancelaste el pago en Webpay. Tu pedido no fue procesado.');
-            // No limpiar carrito porque el pago no se realizó
-        }
-        // Pago completado (exitoso o rechazado)
-        else if (tokenWs) {
+        } else if (tokenWs) {
             try {
-                // Confirmar transacción con Transbank
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/transbank-webpay`, {
                     method: 'POST',
                     headers: {
@@ -63,23 +106,22 @@
 
                 const tbkData = await response.json();
 
-                // Pago aprobado (response_code === 0)
                 if (tbkData.response_code === 0) {
                     iconoEl.textContent = '✅';
-                    tituloEl.textContent = '¡Pago exitoso!';
-                    descEl.textContent = 'Tu pedido ha sido registrado correctamente.';
 
-                    // Recuperar datos del pedido
                     const orderData = JSON.parse(sessionStorage.getItem('webpay_order') || '{}');
                     const carrito = orderData.carrito || [];
                     const total = orderData.total || tbkData.amount;
+                    const tipoDespacho = orderData.tipoDespacho || 'normal';
+                    const direccion = orderData.direccion || '';
+                    const costoDespacho = orderData.costoDespacho || 0;
 
-                    // Mostrar detalle de la transacción
+                    // Detalle transacción
                     detalleEl.style.display = 'block';
                     detalleEl.innerHTML = `
                         <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.875rem;">
                             <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Orden Webpay</span>
+                                <span style="color:var(--text-muted);">Orden</span>
                                 <strong>${tbkData.buy_order}</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between;">
@@ -88,15 +130,23 @@
                             </div>
                             <div style="display:flex; justify-content:space-between;">
                                 <span style="color:var(--text-muted);">Tarjeta</span>
-                                <strong>**** **** **** ${tbkData.card_detail?.card_number || '****'}</strong>
+                                <strong>**** ${tbkData.card_detail?.card_number || '****'}</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Despacho</span>
+                                <strong>${tipoDespacho === 'express' ? '⚡ Express (24hrs)' : 'Normal (3-5 días)'}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:var(--text-muted);">Dirección</span>
+                                <strong style="max-width:200px; text-align:right;">${direccion}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding-top:0.5rem; border-top:1px solid var(--border);">
                                 <span style="color:var(--text-muted);">Total pagado</span>
                                 <strong style="color:var(--success);">$${Number(total).toLocaleString('es-CL')}</strong>
                             </div>
                         </div>`;
 
-                    // Registrar pedido en Supabase
+                    // Registrar en Supabase
                     const { data: usuarioData } = await supabase
                         .from('usuarios')
                         .select('id_usuario')
@@ -117,7 +167,6 @@
                         .single();
 
                     if (pedido) {
-                        // Registrar detalles
                         await supabase.from('detalle_pedido').insert(
                             carrito.map(item => ({
                                 id_pedido: pedido.id_pedido,
@@ -127,7 +176,6 @@
                             }))
                         );
 
-                        // Descontar stock
                         for (const item of carrito) {
                             await supabase.rpc('descontar_stock', {
                                 p_producto_id: item.id_producto,
@@ -135,23 +183,38 @@
                             }).catch(e => console.warn('Stock:', e.message));
                         }
 
+                        // Generar tracking
+                        const { tracking, estimado } = await generarTracking(
+                            pedido.id_pedido, direccion, tipoDespacho
+                        );
+
+                        // Guardar tracking en pedido
+                        await supabase
+                            .from('pedidos')
+                            .update({ tracking_number: tracking })
+                            .eq('id_pedido', pedido.id_pedido)
+                            .catch(() => {});
+
+                        // Mostrar tracking
+                        trackingBox.style.display = 'block';
+                        trackingNum.textContent = tracking;
+                        trackingTipo.textContent = `${tipoDespacho === 'express' ? '⚡ Express' : '📦 Normal'} — Entrega estimada: ${estimado}`;
+
                         tituloEl.textContent = `¡Pago exitoso! Orden #${String(pedido.id_pedido).padStart(5,'0')}`;
+                        descEl.textContent = 'Tu pedido ha sido registrado. Guarda tu número de seguimiento.';
                     }
 
-                    // Limpiar carrito
                     localStorage.removeItem('ms_carrito');
                     sessionStorage.removeItem('webpay_order');
 
                     accionesEl.innerHTML = `
-                        <a href="catalogo.html" class="btn btn-primary" style="display:inline-flex;">
+                        <a href="catalogo.html" class="btn btn-primary" style="display:inline-flex; margin-top:0.5rem;">
                             Seguir comprando
                         </a>`;
 
                 } else {
-                    // Pago rechazado
-                    mostrarError(`Pago rechazado por el banco. Código: ${tbkData.response_code}. Intenta con otra tarjeta.`);
+                    mostrarError(`Pago rechazado. Código: ${tbkData.response_code}. Intenta con otra tarjeta.`);
                 }
-
             } catch (err) {
                 mostrarError('Error al verificar el pago. Contacta al soporte.');
                 console.error(err);
