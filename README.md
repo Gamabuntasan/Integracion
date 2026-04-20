@@ -30,6 +30,11 @@ Explicación breve de la organización de la base de código (adaptada al reposi
   * `app.js`, `auth.js`, `checkout.js`, `supabaseClient.js`, `supabase_migrations.sql`
   * `files/` — carpeta para archivos generados / recursos
 
+
+## Documentación de Arquitectura (Modelo 4+1)
+Acceso a los diagramas de despliegue, comunicación y paquetes:
+* Carpeta drive con fotos y documentos del proyrcto: https://drive.google.com/drive/folders/123ICRlwOFMrSN4XPyjyDSi18XZcwC_j7?hl=es-419
+  
 ## Configuración e Instalación
 1. Clonar el repositorio:
 ```bash
@@ -37,6 +42,6 @@ git clone https://github.com/Gamabuntasan/Integracion.git
 cd Integracion
 
 
-## Documentación de Arquitectura (Modelo 4+1)
-Acceso a los diagramas de despliegue, comunicación y paquetes:
-* Carpeta drive con fotos y documentos del proyrcto: https://drive.google.com/drive/folders/123ICRlwOFMrSN4XPyjyDSi18XZcwC_j7?hl=es-419
+
+
+
