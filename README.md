@@ -34,7 +34,7 @@ Explicación breve de la organización de la base de código (adaptada al reposi
 ## Documentación de Arquitectura (Modelo 4+1)
 Acceso a los diagramas de despliegue, comunicación y paquetes:
 * Carpeta drive con fotos y documentos del proyrcto: https://drive.google.com/drive/folders/123ICRlwOFMrSN4XPyjyDSi18XZcwC_j7?hl=es-419
-  
+" Documento Pruebas Postman https://docs.google.com/document/d/1RvRpEu7SAsOql5V57ONZ_ZnIGlYEBGR-/edit?usp=sharing&ouid=112629744384926831114&rtpof=true&sd=true 
 ## Configuración e Instalación
 1. Clonar el repositorio:
 ```bash
