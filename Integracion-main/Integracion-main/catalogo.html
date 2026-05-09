@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo — Medistock</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .cart-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 200; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .cart-overlay.open { opacity: 1; pointer-events: all; }
+
+        .cart-drawer {
+            position: fixed; top: 0; right: 0;
+            width: 380px; max-width: 100vw; height: 100vh;
+            background: white; z-index: 201;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+            display: flex; flex-direction: column;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+        }
+        .cart-drawer.open { transform: translateX(0); }
+
+        .cart-drawer-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .cart-drawer-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+        .cart-drawer-footer {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .cart-item-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.85rem 0; border-bottom: 1px solid var(--border);
+        }
+        .cart-item-row:last-child { border-bottom: none; }
+        .cart-item-info { flex: 1; }
+        .cart-item-info .name { font-weight: 600; font-size: 0.875rem; }
+        .cart-item-info .price { color: var(--text-muted); font-size: 0.8rem; }
+
+        .qty-control { display: flex; align-items: center; gap: 0.5rem; }
+        .qty-btn {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 1.5px solid var(--border); background: white;
+            cursor: pointer; font-size: 1rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; color: var(--text);
+        }
+        .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .qty-num { font-weight: 700; font-size: 0.9rem; min-width: 20px; text-align: center; }
+
+        .btn-remove {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.1rem; padding: 0.25rem;
+            transition: color 0.15s;
+        }
+        .btn-remove:hover { color: var(--danger); }
+
+        .filter-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .chip {
+            padding: 0.4rem 1rem; border-radius: 100px;
+            border: 1.5px solid var(--border); background: white;
+            font-size: 0.8rem; font-weight: 500; cursor: pointer;
+            transition: all 0.15s; color: var(--text-muted);
+        }
+        .chip:hover { border-color: var(--accent); color: var(--accent); }
+        .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .cart-fab {
+            position: fixed; bottom: 2rem; right: 2rem;
+            background: var(--accent); color: white; border: none;
+            border-radius: 100px; padding: 0.85rem 1.5rem;
+            font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; z-index: 100;
+            box-shadow: 0 4px 16px rgba(14,165,233,0.4);
+            display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;
+        }
+        .cart-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14,165,233,0.4); }
+        .cart-fab .badge {
+            background: white; color: var(--accent);
+            border-radius: 100px; padding: 0 7px;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .cart-fab.hidden { display: none; }
+
+        @media (max-width: 900px) {
+            .cart-fab { bottom: 5.5rem; }
+            .cart-drawer { width: 100vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <nav class="sidebar">
+            <div class="sidebar-logo">MEDI<span>STOCK</span></div>
+            <div class="sidebar-section">Menú</div>
+            <div class="sidebar-nav">
+                <div class="nav-item active"><span class="icon">🛒</span> Catálogo</div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <div class="user-info">
+                        <div class="name" id="user-name">Usuario</div>
+                        <div class="role">Cliente</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%; margin-top:0.75rem;">
+                    Cerrar sesión
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <div class="page-title">Catálogo de Productos</div>
+                    <div class="page-subtitle">Selecciona los productos que necesitas</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <input type="text" id="buscador" placeholder="🔍 Buscar producto..."
+                    style="max-width:360px; width:100%; padding:0.75rem 1rem; border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.9rem; outline:none; transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+
+            <div class="filter-chips" id="filtros-categoria">
+                <div class="chip active" onclick="filtrarCategoria(null, this)">Todos</div>
+            </div>
+
+            <div id="productos-lista" class="products-grid">
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <div class="icon">⏳</div><p>Cargando productos...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Botón flotante -->
+    <button class="cart-fab hidden" id="cart-fab" onclick="abrirCarrito()">
+        🛒 Ver pedido <span class="badge" id="cart-count-fab">0</span>
+    </button>
+
+    <!-- Overlay -->
+    <div class="cart-overlay" id="cart-overlay" onclick="cerrarCarrito()"></div>
+
+    <!-- Carrito lateral -->
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <h3 style="font-size:1.1rem; font-family:'Space Grotesk',sans-serif;">Tu Pedido</h3>
+            <button onclick="cerrarCarrito()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">×</button>
+        </div>
+        <div class="cart-drawer-body" id="cart-drawer-body">
+            <div class="empty-state">
+                <div class="icon">🛒</div><p>Tu pedido está vacío</p>
+            </div>
+        </div>
+        <div class="cart-drawer-footer">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <span style="font-weight:600;">Total</span>
+                <span style="font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:700;" id="cart-total">$0</span>
+            </div>
+            <button onclick="irACheckout()" class="btn btn-success" style="width:100%;">
+                Proceder al pago →
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+        import { requireAuth, cerrarSesion, showToast } from './auth.js';
+
+        const auth = await requireAuth();
+        if (!auth) throw new Error();
+
+        window.logout = () => cerrarSesion();
+
+        const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
+        document.getElementById('user-name').textContent = nombre;
+        document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
+
+        let carrito = JSON.parse(localStorage.getItem('ms_carrito') || '[]');
+        let todosProductos = [];
+        let categoriaActiva = null;
+
+        function guardarCarrito() {
+            localStorage.setItem('ms_carrito', JSON.stringify(carrito));
+            actualizarUI();
+        }
+
+        function actualizarUI() {
+            const total = carrito.reduce((s, i) => s + Number(i.precio_venta_actual) * i.cantidad, 0);
+            const count = carrito.reduce((s, i) => s + i.cantidad, 0);
+
+            const fab = document.getElementById('cart-fab');
+            fab.classList.toggle('hidden', count === 0);
+            document.getElementById('cart-count-fab').textContent = count;
+            document.getElementById('cart-total').textContent = `$${total.toLocaleString('es-CL')}`;
+
+            const body = document.getElementById('cart-drawer-body');
+            if (carrito.length === 0) {
+                body.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><p>Tu pedido está vacío</p></div>`;
+                return;
+            }
+
+            body.innerHTML = carrito.map(item => `
+                <div class="cart-item-row">
+                    <div class="cart-item-info">
+                        <div class="name">${item.nombre}</div>
+                        <div class="price">$${Number(item.precio_venta_actual).toLocaleString('es-CL')} c/u</div>
+                    </div>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="window._qtyCart(${item.id_producto}, -1)">−</button>
+                        <span class="qty-num">${item.cantidad}</span>
+                        <button class="qty-btn" onclick="window._qtyCart(${item.id_producto}, 1)">+</button>
+                    </div>
+                    <div style="font-weight:700; font-size:0.875rem; min-width:70px; text-align:right;">
+                        $${(Number(item.precio_venta_actual) * item.cantidad).toLocaleString('es-CL')}
+                    </div>
+                    <button class="btn-remove" onclick="window._removeCart(${item.id_producto})">🗑</button>
+                </div>
+            `).join('');
+        }
+
+        window._qtyCart = (id, delta) => {
+            const item = carrito.find(i => i.id_producto === id);
+            if (!item) return;
+            item.cantidad += delta;
+            if (item.cantidad <= 0) carrito = carrito.filter(i => i.id_producto !== id);
+            guardarCarrito();
+            aplicarFiltros();
+        };
+
+        window._removeCart = (id) => {
+            carrito = carrito.filter(i => i.id_producto !== id);
+            guardarCarrito();
+            aplicarFiltros();
+            showToast('Producto eliminado', 'info');
+        };
+
+        function agregarAlCarrito(producto) {
+            const existing = carrito.find(i => i.id_producto === producto.id_producto);
+            if (existing) { existing.cantidad += 1; }
+            else { carrito.push({ ...producto, cantidad: 1 }); }
+            guardarCarrito();
+            aplicarFiltros();
+            showToast(`"${producto.nombre}" agregado`, 'success');
+        }
+
+        window.abrirCarrito = () => {
+            document.getElementById('cart-drawer').classList.add('open');
+            document.getElementById('cart-overlay').classList.add('open');
+        };
+        window.cerrarCarrito = () => {
+            document.getElementById('cart-drawer').classList.remove('open');
+            document.getElementById('cart-overlay').classList.remove('open');
+        };
+        window.irACheckout = () => {
+            if (carrito.length === 0) { showToast('Agrega productos primero', 'error'); return; }
+            window.location.href = 'checkout.html';
+        };
+
+        // ── PRODUCTOS ──
+        async function cargarProductos() {
+            const { data, error } = await supabase
+                .from('productos')
+                .select('*, categorias(nombre_cat)');
+
+            if (error || !data) {
+                document.getElementById('productos-lista').innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="icon">📭</div><p>No hay productos disponibles.</p>
+                    </div>`;
+                return;
+            }
+            todosProductos = data;
+            cargarFiltros(data);
+            renderProductos(data);
+        }
+
+        function cargarFiltros(productos) {
+            const categorias = [...new Set(productos.map(p => p.categorias?.nombre_cat).filter(Boolean))];
+            const contenedor = document.getElementById('filtros-categoria');
+            categorias.forEach(cat => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.textContent = cat;
+                chip.onclick = () => filtrarCategoria(cat, chip);
+                contenedor.appendChild(chip);
+            });
+        }
+
+        window.filtrarCategoria = (categoria, el) => {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            categoriaActiva = categoria;
+            aplicarFiltros();
+        };
+
+        document.getElementById('buscador').addEventListener('input', aplicarFiltros);
+
+        function aplicarFiltros() {
+            const q = document.getElementById('buscador').value.toLowerCase();
+            const resultado = todosProductos.filter(p => {
+                const matchQ = p.nombre.toLowerCase().includes(q) || (p.descripcion || '').toLowerCase().includes(q);
+                const matchCat = !categoriaActiva || p.categorias?.nombre_cat === categoriaActiva;
+                return matchQ && matchCat;
+            });
+            renderProductos(resultado);
+        }
+
+        function renderProductos(productos) {
+            const contenedor = document.getElementById('productos-lista');
+            if (!productos.length) {
+                contenedor.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No se encontraron productos.</p></div>`;
+                return;
+            }
+            contenedor.innerHTML = productos.map(p => {
+                const enCarrito = carrito.find(i => i.id_producto === p.id_producto);
+                return `
+                    <div class="product-card">
+                        <div class="product-category">${p.categorias?.nombre_cat || 'Insumo médico'}</div>
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-desc">${p.descripcion || 'Sin descripción.'}</div>
+                        <div class="product-price">$${Number(p.precio_venta_actual).toLocaleString('es-CL')}</div>
+                        ${enCarrito
+                            ? `<div class="qty-control" style="justify-content:center; margin-top:0.75rem;">
+                                <button class="qty-btn" onclick="window._qtyCart(${p.id_producto}, -1)">−</button>
+                                <span class="qty-num">${enCarrito.cantidad}</span>
+                                <button class="qty-btn" onclick="window._qtyCart(${p.id_producto}, 1)">+</button>
+                               </div>`
+                            : `<button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;"
+                                onclick="window._agregar(${p.id_producto})">+ Agregar al pedido</button>`
+                        }
+                    </div>`;
+            }).join('');
+        }
+
+        window._agregar = (id) => {
+            const p = todosProductos.find(p => p.id_producto === id);
+            if (p) agregarAlCarrito(p);
+        };
+
+        // Sincronizar stock cada 20 minutos
+        setInterval(async () => {
+            const { data } = await supabase.from('productos').select('id_producto, precio_venta_actual');
+            if (data) {
+                carrito.forEach(item => {
+                    const act = data.find(p => p.id_producto === item.id_producto);
+                    if (act) item.precio_venta_actual = act.precio_venta_actual;
+                });
+                guardarCarrito();
+            }
+        }, 20 * 60 * 1000);
+
+        actualizarUI();
+        cargarProductos();
+    </script>
+</body>
+</html>

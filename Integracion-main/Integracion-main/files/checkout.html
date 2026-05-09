@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — Medistock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <nav class="sidebar">
+            <div class="sidebar-logo">MEDI<span>STOCK</span></div>
+            <div class="sidebar-nav">
+                <div class="nav-item" onclick="window.location.href='catalogo.html'">
+                    <span class="icon">🛒</span> Catálogo
+                </div>
+                <div class="nav-item active">
+                    <span class="icon">💳</span> Pago
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <div class="user-info">
+                        <div class="name" id="user-name">Usuario</div>
+                        <div class="role">Cliente</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%; margin-top:0.75rem;">
+                    Cerrar sesión
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <div class="page-title">Finalizar Pedido</div>
+                    <div class="page-subtitle">Revisa tu pedido y paga con Webpay</div>
+                </div>
+                <button class="btn btn-outline" onclick="window.location.href='catalogo.html'">
+                    ← Seguir comprando
+                </button>
+            </div>
+
+            <div class="checkout-layout">
+                <!-- Resumen -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Resumen del pedido</span>
+                        <span id="items-count" style="color:var(--text-muted); font-size:0.8rem;"></span>
+                    </div>
+                    <div class="card-body">
+                        <div id="resumen-productos"></div>
+                        <div class="cart-total">
+                            <span class="label">Total a pagar</span>
+                            <span class="amount" id="total-monto">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pago -->
+                <div style="display:flex; flex-direction:column; gap:1rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Método de pago</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Logo Webpay -->
+                            <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:var(--radius); padding:1rem; display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+                                <div style="background:#e8192c; color:white; font-weight:900; font-size:0.75rem; padding:0.4rem 0.6rem; border-radius:6px; letter-spacing:0.05em;">WEBPAY</div>
+                                <div>
+                                    <div style="font-weight:600; font-size:0.875rem;">Webpay Plus</div>
+                                    <div style="color:var(--text-muted); font-size:0.75rem;">Débito, Crédito y Prepago</div>
+                                </div>
+                                <div style="margin-left:auto; color:var(--success); font-size:1.2rem;">✓</div>
+                            </div>
+
+                            <button id="btn-pagar" class="btn btn-primary" style="width:100%; font-size:1rem; padding:1rem;">
+                                🔒 Pagar con Webpay
+                            </button>
+                            <div id="pago-status" style="margin-top:1rem;"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body" style="padding:1rem;">
+                            <p style="font-size:0.75rem; color:var(--text-muted); line-height:1.7;">
+                                🔒 Pago 100% seguro con Webpay Plus de Transbank.<br>
+                                Acepta tarjetas de débito, crédito y prepago.<br>
+                                <strong>Ambiente de integración:</strong> usa tarjeta VISA <code>4051885600446623</code>, CVV <code>123</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="checkout.js"></script>
+</body>
+</html>

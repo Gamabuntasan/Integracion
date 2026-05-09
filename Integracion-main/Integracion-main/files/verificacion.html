@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación — Medistock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-brand">
+            <div class="brand-logo">MEDI<span>STOCK</span></div>
+            <p class="brand-subtitle">
+                Verificación de dos factores requerida para accesos de nivel administrativo.
+            </p>
+        </div>
+
+        <div class="auth-form-side">
+            <div class="auth-card">
+                <h2>Verificación</h2>
+                <p class="subtitle">Ingresa el código de 6 dígitos enviado a tu correo registrado</p>
+
+                <div class="code-inputs" id="code-inputs">
+                    <input class="code-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="code-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="code-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="code-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="code-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="code-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                </div>
+
+                <button id="btn-verify" class="btn btn-primary" disabled>
+                    Verificar Identidad
+                </button>
+
+                <div id="message" style="margin-top: 1rem;"></div>
+
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <button onclick="reenviarCodigo()" class="btn btn-outline btn-sm" id="btn-resend">
+                        Reenviar código
+                    </button>
+                </div>
+
+                <p style="margin-top: 1.5rem; text-align: center;">
+                    <a href="index.html" style="color: var(--text-muted); font-size: 0.8rem;">← Volver al inicio</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { requireAuth, cerrarSesion, showToast } from './auth.js';
+
+        // Verificar que haya sesión activa (roles 1 y 3)
+        const auth = await requireAuth([1, 3]);
+        if (!auth) throw new Error('Sin sesión');
+
+        const inputs = document.querySelectorAll('.code-input');
+        const btnVerify = document.getElementById('btn-verify');
+        const messageArea = document.getElementById('message');
+
+        // CÓDIGO DE DEMO: En producción esto vendría del servidor / TOTP
+        const DEMO_CODE = '123456';
+
+        // Auto-focus y navegación entre dígitos
+        inputs.forEach((input, idx) => {
+            input.addEventListener('input', (e) => {
+                // Solo permitir números
+                input.value = input.value.replace(/\D/g, '');
+                if (input.value && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                }
+                checkComplete();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && idx > 0) {
+                    inputs[idx - 1].focus();
+                }
+            });
+
+            // Pegar código completo
+            input.addEventListener('paste', (e) => {
+                const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                if (pasted.length === 6) {
+                    e.preventDefault();
+                    inputs.forEach((inp, i) => inp.value = pasted[i] || '');
+                    inputs[5].focus();
+                    checkComplete();
+                }
+            });
+        });
+
+        function checkComplete() {
+            const code = Array.from(inputs).map(i => i.value).join('');
+            btnVerify.disabled = code.length < 6;
+        }
+
+        btnVerify.addEventListener('click', () => {
+            const code = Array.from(inputs).map(i => i.value).join('');
+
+            if (code === DEMO_CODE) {
+                messageArea.innerHTML = '<span style="color: var(--success);">✓ Identidad verificada correctamente</span>';
+                btnVerify.disabled = true;
+
+                const rolId = parseInt(sessionStorage.getItem('usuario_rol')) || 1;
+                setTimeout(() => {
+                    window.location.href = rolId === 1 ? 'ejecutivo.html' : 'ejecutivo.html';
+                }, 1500);
+            } else {
+                messageArea.innerHTML = '<span style="color: var(--danger);">✕ Código incorrecto. Inténtalo nuevamente.</span>';
+                inputs.forEach(i => i.value = '');
+                inputs[0].focus();
+            }
+        });
+
+        async function reenviarCodigo() {
+            const btn = document.getElementById('btn-resend');
+            btn.disabled = true;
+            showToast('Código reenviado a tu correo', 'success');
+            let count = 30;
+            const interval = setInterval(() => {
+                btn.textContent = `Reenviar (${count}s)`;
+                if (--count < 0) {
+                    clearInterval(interval);
+                    btn.textContent = 'Reenviar código';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        // Exponer para el onclick del HTML
+        window.reenviarCodigo = reenviarCodigo;
+
+        inputs[0].focus();
+    </script>
+</body>
+</html>
