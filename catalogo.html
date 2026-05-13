@@ -13,7 +13,6 @@
             transition: opacity 0.3s;
         }
         .cart-overlay.open { opacity: 1; pointer-events: all; }
-
         .cart-drawer {
             position: fixed; top: 0; right: 0;
             width: 380px; max-width: 100vw; height: 100vh;
@@ -24,7 +23,6 @@
             box-shadow: -4px 0 24px rgba(0,0,0,0.12);
         }
         .cart-drawer.open { transform: translateX(0); }
-
         .cart-drawer-header {
             padding: 1.25rem 1.5rem;
             border-bottom: 1px solid var(--border);
@@ -36,7 +34,6 @@
             border-top: 1px solid var(--border);
             background: var(--surface-2);
         }
-
         .cart-item-row {
             display: flex; align-items: center; gap: 0.75rem;
             padding: 0.85rem 0; border-bottom: 1px solid var(--border);
@@ -45,7 +42,6 @@
         .cart-item-info { flex: 1; }
         .cart-item-info .name { font-weight: 600; font-size: 0.875rem; }
         .cart-item-info .price { color: var(--text-muted); font-size: 0.8rem; }
-
         .qty-control { display: flex; align-items: center; gap: 0.5rem; }
         .qty-btn {
             width: 28px; height: 28px; border-radius: 50%;
@@ -56,14 +52,12 @@
         }
         .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
         .qty-num { font-weight: 700; font-size: 0.9rem; min-width: 20px; text-align: center; }
-
         .btn-remove {
             background: none; border: none; color: var(--text-muted);
             cursor: pointer; font-size: 1.1rem; padding: 0.25rem;
             transition: color 0.15s;
         }
         .btn-remove:hover { color: var(--danger); }
-
         .filter-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
         .chip {
             padding: 0.4rem 1rem; border-radius: 100px;
@@ -73,7 +67,6 @@
         }
         .chip:hover { border-color: var(--accent); color: var(--accent); }
         .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
-
         .cart-fab {
             position: fixed; bottom: 2rem; right: 2rem;
             background: var(--accent); color: white; border: none;
@@ -90,11 +83,51 @@
             font-size: 0.75rem; font-weight: 700;
         }
         .cart-fab.hidden { display: none; }
-
         @media (max-width: 900px) {
             .cart-fab { bottom: 5.5rem; }
             .cart-drawer { width: 100vw; }
         }
+
+        /* ============================================
+           WIDGET MEDISTOCK - Clima + Divisas
+           ============================================ */
+        #medistock-widget-container {
+            display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1.5rem;
+        }
+        .mw-card {
+            background: linear-gradient(135deg, #1a2535 0%, #0f1923 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 18px 22px; color: #fff;
+            min-width: 220px; flex: 1; position: relative; overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .mw-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+        }
+        .mw-card-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #64748b; margin-bottom: 12px; }
+        .mw-weather-main { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .mw-weather-icon { font-size: 38px; line-height: 1; filter: drop-shadow(0 0 8px rgba(59,130,246,0.5)); }
+        .mw-weather-temp { font-size: 32px; font-weight: 300; color: #f1f5f9; line-height: 1; }
+        .mw-weather-temp span { font-size: 16px; color: #64748b; }
+        .mw-weather-city { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+        .mw-weather-desc { font-size: 12px; color: #64748b; text-transform: capitalize; }
+        .mw-alert { margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .mw-alert.invierno  { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+        .mw-alert.verano    { background: rgba(251,146,60,0.15);  border: 1px solid rgba(251,146,60,0.3);  color: #fdba74; }
+        .mw-alert.primavera { background: rgba(34,197,94,0.15);   border: 1px solid rgba(34,197,94,0.3);   color: #86efac; }
+        .mw-alert.otono     { background: rgba(234,179,8,0.15);   border: 1px solid rgba(234,179,8,0.3);   color: #fde047; }
+        .mw-currency-list { display: flex; flex-direction: column; gap: 8px; }
+        .mw-currency-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); transition: background 0.2s; }
+        .mw-currency-row:hover { background: rgba(255,255,255,0.08); }
+        .mw-currency-flag  { font-size: 18px; margin-right: 8px; }
+        .mw-currency-name  { font-size: 12px; font-weight: 600; color: #e2e8f0; flex: 1; }
+        .mw-currency-value { font-size: 13px; font-weight: 700; color: #38bdf8; font-variant-numeric: tabular-nums; }
+        .mw-currency-base  { font-size: 10px; color: #475569; text-align: right; }
+        .mw-loading { color: #475569; font-size: 12px; text-align: center; padding: 20px 0; animation: mw-pulse 1.5s infinite; }
+        .mw-error   { color: #f87171; font-size: 11px; text-align: center; padding: 10px 0; }
+        .mw-updated { font-size: 10px; color: #334155; margin-top: 10px; text-align: right; }
+        @keyframes mw-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -113,9 +146,7 @@
                         <div class="role">Cliente</div>
                     </div>
                 </div>
-                <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%; margin-top:0.75rem;">
-                    Cerrar sesión
-                </button>
+                <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%; margin-top:0.75rem;">Cerrar sesión</button>
             </div>
         </nav>
 
@@ -126,6 +157,38 @@
                     <div class="page-subtitle">Selecciona los productos que necesitas</div>
                 </div>
             </div>
+
+            <!-- WIDGET CLIMA + DIVISAS -->
+            <div id="medistock-widget-container">
+                <div class="mw-card">
+                    <div class="mw-card-title">🌍 Condición climática — Santiago</div>
+                    <div class="mw-loading" id="mw-weather-loading">Cargando clima...</div>
+                    <div id="mw-weather-content" style="display:none">
+                        <div class="mw-weather-main">
+                            <div class="mw-weather-icon" id="mw-icon">⛅</div>
+                            <div><div class="mw-weather-temp" id="mw-temp">--<span>°C</span></div></div>
+                        </div>
+                        <div class="mw-weather-city" id="mw-city">--</div>
+                        <div class="mw-weather-desc" id="mw-desc">--</div>
+                        <div class="mw-alert" id="mw-season-alert">
+                            <span id="mw-season-icon">📦</span>
+                            <span id="mw-season-text">--</span>
+                        </div>
+                        <div class="mw-updated" id="mw-weather-updated"></div>
+                    </div>
+                    <div class="mw-error" id="mw-weather-error" style="display:none">No se pudo cargar el clima</div>
+                </div>
+                <div class="mw-card">
+                    <div class="mw-card-title">💱 Tipo de cambio vs CLP</div>
+                    <div class="mw-loading" id="mw-currency-loading">Cargando divisas...</div>
+                    <div id="mw-currency-content" style="display:none">
+                        <div class="mw-currency-list" id="mw-currency-list"></div>
+                        <div class="mw-updated" id="mw-currency-updated"></div>
+                    </div>
+                    <div class="mw-error" id="mw-currency-error" style="display:none">No se pudo cargar divisas</div>
+                </div>
+            </div>
+            <!-- FIN WIDGET -->
 
             <div style="margin-bottom:1rem;">
                 <input type="text" id="buscador" placeholder="🔍 Buscar producto..."
@@ -145,73 +208,49 @@
         </main>
     </div>
 
-    <!-- Botón flotante -->
     <button class="cart-fab hidden" id="cart-fab" onclick="abrirCarrito()">
         🛒 Ver pedido <span class="badge" id="cart-count-fab">0</span>
     </button>
-
-    <!-- Overlay -->
     <div class="cart-overlay" id="cart-overlay" onclick="cerrarCarrito()"></div>
-
-    <!-- Carrito lateral -->
     <div class="cart-drawer" id="cart-drawer">
         <div class="cart-drawer-header">
             <h3 style="font-size:1.1rem; font-family:'Space Grotesk',sans-serif;">Tu Pedido</h3>
             <button onclick="cerrarCarrito()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">×</button>
         </div>
         <div class="cart-drawer-body" id="cart-drawer-body">
-            <div class="empty-state">
-                <div class="icon">🛒</div><p>Tu pedido está vacío</p>
-            </div>
+            <div class="empty-state"><div class="icon">🛒</div><p>Tu pedido está vacío</p></div>
         </div>
         <div class="cart-drawer-footer">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <span style="font-weight:600;">Total</span>
                 <span style="font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:700;" id="cart-total">$0</span>
             </div>
-            <button onclick="irACheckout()" class="btn btn-success" style="width:100%;">
-                Proceder al pago →
-            </button>
+            <button onclick="irACheckout()" class="btn btn-success" style="width:100%;">Proceder al pago →</button>
         </div>
     </div>
 
     <script type="module">
         import { supabase } from './supabaseClient.js';
         import { requireAuth, cerrarSesion, showToast } from './auth.js';
-
         const auth = await requireAuth();
         if (!auth) throw new Error();
-
         window.logout = () => cerrarSesion();
-
         const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
         document.getElementById('user-name').textContent = nombre;
         document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
-
         let carrito = JSON.parse(localStorage.getItem('ms_carrito') || '[]');
         let todosProductos = [];
         let categoriaActiva = null;
-
-        function guardarCarrito() {
-            localStorage.setItem('ms_carrito', JSON.stringify(carrito));
-            actualizarUI();
-        }
-
+        function guardarCarrito() { localStorage.setItem('ms_carrito', JSON.stringify(carrito)); actualizarUI(); }
         function actualizarUI() {
             const total = carrito.reduce((s, i) => s + Number(i.precio_venta_actual) * i.cantidad, 0);
             const count = carrito.reduce((s, i) => s + i.cantidad, 0);
-
             const fab = document.getElementById('cart-fab');
             fab.classList.toggle('hidden', count === 0);
             document.getElementById('cart-count-fab').textContent = count;
             document.getElementById('cart-total').textContent = `$${total.toLocaleString('es-CL')}`;
-
             const body = document.getElementById('cart-drawer-body');
-            if (carrito.length === 0) {
-                body.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><p>Tu pedido está vacío</p></div>`;
-                return;
-            }
-
+            if (carrito.length === 0) { body.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><p>Tu pedido está vacío</p></div>`; return; }
             body.innerHTML = carrito.map(item => `
                 <div class="cart-item-row">
                     <div class="cart-item-info">
@@ -223,147 +262,97 @@
                         <span class="qty-num">${item.cantidad}</span>
                         <button class="qty-btn" onclick="window._qtyCart(${item.id_producto}, 1)">+</button>
                     </div>
-                    <div style="font-weight:700; font-size:0.875rem; min-width:70px; text-align:right;">
-                        $${(Number(item.precio_venta_actual) * item.cantidad).toLocaleString('es-CL')}
-                    </div>
+                    <div style="font-weight:700; font-size:0.875rem; min-width:70px; text-align:right;">$${(Number(item.precio_venta_actual) * item.cantidad).toLocaleString('es-CL')}</div>
                     <button class="btn-remove" onclick="window._removeCart(${item.id_producto})">🗑</button>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
-
-        window._qtyCart = (id, delta) => {
-            const item = carrito.find(i => i.id_producto === id);
-            if (!item) return;
-            item.cantidad += delta;
-            if (item.cantidad <= 0) carrito = carrito.filter(i => i.id_producto !== id);
-            guardarCarrito();
-            aplicarFiltros();
-        };
-
-        window._removeCart = (id) => {
-            carrito = carrito.filter(i => i.id_producto !== id);
-            guardarCarrito();
-            aplicarFiltros();
-            showToast('Producto eliminado', 'info');
-        };
-
-        function agregarAlCarrito(producto) {
-            const existing = carrito.find(i => i.id_producto === producto.id_producto);
-            if (existing) { existing.cantidad += 1; }
-            else { carrito.push({ ...producto, cantidad: 1 }); }
-            guardarCarrito();
-            aplicarFiltros();
-            showToast(`"${producto.nombre}" agregado`, 'success');
-        }
-
-        window.abrirCarrito = () => {
-            document.getElementById('cart-drawer').classList.add('open');
-            document.getElementById('cart-overlay').classList.add('open');
-        };
-        window.cerrarCarrito = () => {
-            document.getElementById('cart-drawer').classList.remove('open');
-            document.getElementById('cart-overlay').classList.remove('open');
-        };
-        window.irACheckout = () => {
-            if (carrito.length === 0) { showToast('Agrega productos primero', 'error'); return; }
-            window.location.href = 'checkout.html';
-        };
-
-        // ── PRODUCTOS ──
+        window._qtyCart = (id, delta) => { const item = carrito.find(i => i.id_producto === id); if (!item) return; item.cantidad += delta; if (item.cantidad <= 0) carrito = carrito.filter(i => i.id_producto !== id); guardarCarrito(); aplicarFiltros(); };
+        window._removeCart = (id) => { carrito = carrito.filter(i => i.id_producto !== id); guardarCarrito(); aplicarFiltros(); showToast('Producto eliminado', 'info'); };
+        function agregarAlCarrito(producto) { const existing = carrito.find(i => i.id_producto === producto.id_producto); if (existing) { existing.cantidad += 1; } else { carrito.push({ ...producto, cantidad: 1 }); } guardarCarrito(); aplicarFiltros(); showToast(`"${producto.nombre}" agregado`, 'success'); }
+        window.abrirCarrito = () => { document.getElementById('cart-drawer').classList.add('open'); document.getElementById('cart-overlay').classList.add('open'); };
+        window.cerrarCarrito = () => { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-overlay').classList.remove('open'); };
+        window.irACheckout = () => { if (carrito.length === 0) { showToast('Agrega productos primero', 'error'); return; } window.location.href = 'checkout.html'; };
         async function cargarProductos() {
-            const { data, error } = await supabase
-                .from('productos')
-                .select('*, categorias(nombre_cat)');
-
-            if (error || !data) {
-                document.getElementById('productos-lista').innerHTML = `
-                    <div class="empty-state" style="grid-column:1/-1;">
-                        <div class="icon">📭</div><p>No hay productos disponibles.</p>
-                    </div>`;
-                return;
-            }
-            todosProductos = data;
-            cargarFiltros(data);
-            renderProductos(data);
+            const { data, error } = await supabase.from('productos').select('*, categorias(nombre_cat)');
+            if (error || !data) { document.getElementById('productos-lista').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">📭</div><p>No hay productos disponibles.</p></div>`; return; }
+            todosProductos = data; cargarFiltros(data); renderProductos(data);
         }
-
         function cargarFiltros(productos) {
             const categorias = [...new Set(productos.map(p => p.categorias?.nombre_cat).filter(Boolean))];
             const contenedor = document.getElementById('filtros-categoria');
-            categorias.forEach(cat => {
-                const chip = document.createElement('div');
-                chip.className = 'chip';
-                chip.textContent = cat;
-                chip.onclick = () => filtrarCategoria(cat, chip);
-                contenedor.appendChild(chip);
-            });
+            categorias.forEach(cat => { const chip = document.createElement('div'); chip.className = 'chip'; chip.textContent = cat; chip.onclick = () => filtrarCategoria(cat, chip); contenedor.appendChild(chip); });
         }
-
-        window.filtrarCategoria = (categoria, el) => {
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            categoriaActiva = categoria;
-            aplicarFiltros();
-        };
-
+        window.filtrarCategoria = (categoria, el) => { document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); categoriaActiva = categoria; aplicarFiltros(); };
         document.getElementById('buscador').addEventListener('input', aplicarFiltros);
-
         function aplicarFiltros() {
             const q = document.getElementById('buscador').value.toLowerCase();
-            const resultado = todosProductos.filter(p => {
-                const matchQ = p.nombre.toLowerCase().includes(q) || (p.descripcion || '').toLowerCase().includes(q);
-                const matchCat = !categoriaActiva || p.categorias?.nombre_cat === categoriaActiva;
-                return matchQ && matchCat;
-            });
+            const resultado = todosProductos.filter(p => { const matchQ = p.nombre.toLowerCase().includes(q) || (p.descripcion || '').toLowerCase().includes(q); const matchCat = !categoriaActiva || p.categorias?.nombre_cat === categoriaActiva; return matchQ && matchCat; });
             renderProductos(resultado);
         }
-
         function renderProductos(productos) {
             const contenedor = document.getElementById('productos-lista');
-            if (!productos.length) {
-                contenedor.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No se encontraron productos.</p></div>`;
-                return;
-            }
-            contenedor.innerHTML = productos.map(p => {
-                const enCarrito = carrito.find(i => i.id_producto === p.id_producto);
-                return `
-                    <div class="product-card">
-                        <div class="product-category">${p.categorias?.nombre_cat || 'Insumo médico'}</div>
-                        <div class="product-name">${p.nombre}</div>
-                        <div class="product-desc">${p.descripcion || 'Sin descripción.'}</div>
-                        <div class="product-price">$${Number(p.precio_venta_actual).toLocaleString('es-CL')}</div>
-                        ${enCarrito
-                            ? `<div class="qty-control" style="justify-content:center; margin-top:0.75rem;">
-                                <button class="qty-btn" onclick="window._qtyCart(${p.id_producto}, -1)">−</button>
-                                <span class="qty-num">${enCarrito.cantidad}</span>
-                                <button class="qty-btn" onclick="window._qtyCart(${p.id_producto}, 1)">+</button>
-                               </div>`
-                            : `<button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;"
-                                onclick="window._agregar(${p.id_producto})">+ Agregar al pedido</button>`
-                        }
-                    </div>`;
-            }).join('');
+            if (!productos.length) { contenedor.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No se encontraron productos.</p></div>`; return; }
+            contenedor.innerHTML = productos.map(p => { const enCarrito = carrito.find(i => i.id_producto === p.id_producto); return `<div class="product-card"><div class="product-category">${p.categorias?.nombre_cat || 'Insumo médico'}</div><div class="product-name">${p.nombre}</div><div class="product-desc">${p.descripcion || 'Sin descripción.'}</div><div class="product-price">$${Number(p.precio_venta_actual).toLocaleString('es-CL')}</div>${enCarrito ? `<div class="qty-control" style="justify-content:center; margin-top:0.75rem;"><button class="qty-btn" onclick="window._qtyCart(${p.id_producto}, -1)">−</button><span class="qty-num">${enCarrito.cantidad}</span><button class="qty-btn" onclick="window._qtyCart(${p.id_producto}, 1)">+</button></div>` : `<button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;" onclick="window._agregar(${p.id_producto})">+ Agregar al pedido</button>`}</div>`; }).join('');
         }
-
-        window._agregar = (id) => {
-            const p = todosProductos.find(p => p.id_producto === id);
-            if (p) agregarAlCarrito(p);
-        };
-
-        // Sincronizar stock cada 20 minutos
-        setInterval(async () => {
-            const { data } = await supabase.from('productos').select('id_producto, precio_venta_actual');
-            if (data) {
-                carrito.forEach(item => {
-                    const act = data.find(p => p.id_producto === item.id_producto);
-                    if (act) item.precio_venta_actual = act.precio_venta_actual;
-                });
-                guardarCarrito();
-            }
-        }, 20 * 60 * 1000);
-
+        window._agregar = (id) => { const p = todosProductos.find(p => p.id_producto === id); if (p) agregarAlCarrito(p); };
+        setInterval(async () => { const { data } = await supabase.from('productos').select('id_producto, precio_venta_actual'); if (data) { carrito.forEach(item => { const act = data.find(p => p.id_producto === item.id_producto); if (act) item.precio_venta_actual = act.precio_venta_actual; }); guardarCarrito(); } }, 20 * 60 * 1000);
         actualizarUI();
         cargarProductos();
+    </script>
+
+    <script>
+        const WEATHER_API_KEY = '81071c4c16e3f2f92f71e35121da3969';
+        const EXCHANGE_API_KEY = 'd040d17cf8ea9a7ffc68dbcd';
+        const CIUDAD = 'Santiago,CL';
+        const SEASON_CONFIG = {
+            invierno:  { class: 'invierno',  icon: '❄️', text: 'Temporada alta — Antigripales, vitamina C y analgésicos' },
+            verano:    { class: 'verano',    icon: '☀️', text: 'Temporada alta — Protector solar, hidratantes y antihistamínicos' },
+            primavera: { class: 'primavera', icon: '🌸', text: 'Temporada alta — Antialérgicos y descongestionantes' },
+            otono:     { class: 'otono',     icon: '🍂', text: 'Prevención — Stock preventivo de vitaminas y refuerzos' }
+        };
+        function getEstacion(mes) { if (mes >= 12 || mes <= 2) return 'verano'; if (mes >= 3 && mes <= 5) return 'otono'; if (mes >= 6 && mes <= 8) return 'invierno'; return 'primavera'; }
+        function getWeatherEmoji(id) { if (id >= 200 && id < 300) return '⛈️'; if (id >= 300 && id < 600) return '🌧️'; if (id >= 600 && id < 700) return '❄️'; if (id >= 700 && id < 800) return '🌫️'; if (id === 800) return '☀️'; if (id === 801) return '🌤️'; if (id >= 802) return '⛅'; return '🌡️'; }
+        const DIVISAS = [ { code: 'USD', flag: '🇺🇸', name: 'Dólar', sub: 'USD' }, { code: 'EUR', flag: '🇪🇺', name: 'Euro', sub: 'EUR' }, { code: 'JPY', flag: '🇯🇵', name: 'Yen', sub: 'JPY' }, { code: 'GBP', flag: '🇬🇧', name: 'Libra', sub: 'GBP' }, { code: 'BRL', flag: '🇧🇷', name: 'Real', sub: 'BRL' } ];
+        async function loadWeather() {
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CIUDAD}&appid=${WEATHER_API_KEY}&units=metric&lang=es`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                const temp = Math.round(data.main.temp);
+                const season = SEASON_CONFIG[getEstacion(new Date().getMonth() + 1)];
+                document.getElementById('mw-temp').innerHTML = `${temp}<span>°C</span>`;
+                document.getElementById('mw-icon').textContent = getWeatherEmoji(data.weather[0].id);
+                document.getElementById('mw-city').textContent = `📍 ${data.name}, Chile`;
+                document.getElementById('mw-desc').textContent = data.weather[0].description;
+                const alertEl = document.getElementById('mw-season-alert');
+                alertEl.className = `mw-alert ${season.class}`;
+                document.getElementById('mw-season-icon').textContent = season.icon;
+                document.getElementById('mw-season-text').textContent = season.text;
+                document.getElementById('mw-weather-updated').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'})}`;
+                document.getElementById('mw-weather-loading').style.display = 'none';
+                document.getElementById('mw-weather-content').style.display = 'block';
+            } catch(e) { document.getElementById('mw-weather-loading').style.display = 'none'; document.getElementById('mw-weather-error').style.display = 'block'; }
+        }
+        async function loadCurrency() {
+            try {
+                const res = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_API_KEY}/latest/CLP`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                const list = document.getElementById('mw-currency-list');
+                list.innerHTML = '';
+                DIVISAS.forEach(d => {
+                    const row = document.createElement('div');
+                    row.className = 'mw-currency-row';
+                    row.innerHTML = `<span class="mw-currency-flag">${d.flag}</span><div style="flex:1"><div class="mw-currency-name">${d.name}</div><div class="mw-currency-base">1 ${d.sub}</div></div><div><div class="mw-currency-value">$${Math.round(1/data.conversion_rates[d.code]).toLocaleString('es-CL')}</div><div class="mw-currency-base">CLP</div></div>`;
+                    list.appendChild(row);
+                });
+                document.getElementById('mw-currency-updated').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'})}`;
+                document.getElementById('mw-currency-loading').style.display = 'none';
+                document.getElementById('mw-currency-content').style.display = 'block';
+            } catch(e) { document.getElementById('mw-currency-loading').style.display = 'none'; document.getElementById('mw-currency-error').style.display = 'block'; }
+        }
+        loadWeather(); loadCurrency();
+        setInterval(loadWeather, 10*60*1000); setInterval(loadCurrency, 10*60*1000);
     </script>
 </body>
 </html>
