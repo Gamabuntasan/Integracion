@@ -106,7 +106,7 @@ const MOCKAPI_URL = 'https://69e5507bce4e908a155e08e1.mockapi.io';
 
                 const tbkData = await response.json();
 
-                if (tbkData.response_code === 0) {
+                if (Number(tbkData.response_code) === 0) {
                     iconoEl.textContent = '✅';
 
                     const orderData = JSON.parse(sessionStorage.getItem('webpay_order') || '{}');
