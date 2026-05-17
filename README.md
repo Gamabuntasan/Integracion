@@ -25,6 +25,7 @@ Sistema de gestión farmacéutica y e-commerce para distribuidoras médicas.
 - ✅ Webpay sandbox (medio de pago)
 - ✅ OpenWeatherMap (clima en tiempo real)
 - ✅ ExchangeRate-API (conversión de divisas)
+✅ MockAPI Logística (tracking de envíos)
 
 ## Repositorio Backend
 
