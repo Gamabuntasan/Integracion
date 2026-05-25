@@ -861,7 +861,7 @@ async function cargarProductos() {
   const { data, error } = await supabase
     .from('productos')
     .select('*')
-    .order('id', { ascending: false });
+    .order('id_usuario', { ascending: false });
 
   if (error) {
     document.getElementById('tabla-productos').innerHTML =
@@ -991,7 +991,7 @@ async function cargarPersonal() {
   const { data, error } = await supabase
     .from('usuarios')
     .select('*')
-    .order('id', { ascending: false });
+    .order('id_usuario', { ascending: false });
 
   if (error) {
     document.getElementById('tabla-personal').innerHTML =
@@ -1016,7 +1016,7 @@ function renderTablaPersonal(lista) {
       ? `<span class="badge badge-success">Activo</span>`
       : `<span class="badge badge-danger">Inactivo</span>`;
     return `<tr>
-      <td style="color:var(--text-muted);">${u.id}</td>
+      <td style="color:var(--text-muted);">${u.id_usuario}</td>
       <td><strong>${u.nombre || ''} ${u.apellido || ''}</strong></td>
       <td style="font-size:0.82rem;">${u.email || '—'}</td>
       <td><span class="role-chip role-${rolId}">${rolNombre}</span></td>
@@ -1025,8 +1025,8 @@ function renderTablaPersonal(lista) {
       <td>${estadoBadge}</td>
       <td>
         <div style="display:flex;gap:0.4rem;">
-          <button class="btn-edit"   onclick="abrirModalPersonal(${u.id})">✏️</button>
-          <button class="btn-delete" onclick="abrirModalPersDelete(${u.id})">🗑️</button>
+          <button class="btn-edit"   onclick="abrirModalPersonal(${u.id_usuario})">✏️</button>
+          <button class="btn-delete" onclick="abrirModalPersDelete(${u.id_usuario})">🗑️</button>
         </div>
       </td>
     </tr>`;
@@ -1048,9 +1048,9 @@ window.filtrarPersonal = () => {
 };
 
 window.abrirModalPersonal = (id) => {
-  const u = id ? todoPersonal.find(x => x.id === id) : null;
+  const u = id ? todoPersonal.find(x => x.id_usuario === id) : null;
   document.getElementById('modal-pers-titulo').textContent = u ? '✏️ Editar Usuario' : '➕ Agregar Usuario';
-  document.getElementById('pers-id').value       = u?.id || '';
+  document.getElementById('pers-id').value       = u?.id_usuario || '';
   document.getElementById('pers-nombre').value   = u?.nombre || '';
   document.getElementById('pers-apellido').value = u?.apellido || '';
   document.getElementById('pers-email').value    = u?.email || '';
@@ -1087,7 +1087,7 @@ window.guardarPersonal = async () => {
 
   let error;
   if (id) {
-    ({ error } = await supabase.from('usuarios').update(payload).eq('id', id));
+    ({ error } = await supabase.from('usuarios').update(payload).eq('id_usuario', id));
   } else {
     ({ error } = await supabase.from('usuarios').insert(payload));
   }
@@ -1100,7 +1100,7 @@ window.guardarPersonal = async () => {
 
 window.abrirModalPersDelete = (id) => {
   persDeleteId = id;
-  const u = todoPersonal.find(x => x.id === id);
+  const u = todoPersonal.find(x => x.id_usuario === id);
   document.getElementById('pers-delete-info').textContent =
     `¿Seguro que deseas eliminar al usuario "${u?.nombre || ''} ${u?.apellido || ''}" (${u?.email || ''})?`;
   document.getElementById('modal-pers-delete').classList.add('open');
@@ -1111,7 +1111,7 @@ window.cerrarModalPersDelete = () => {
 };
 window.confirmarEliminarPersonal = async () => {
   if (!persDeleteId) return;
-  const { error } = await supabase.from('usuarios').delete().eq('id', persDeleteId);
+  const { error } = await supabase.from('usuarios').delete().eq('id_usuario', persDeleteId);
   if (error) { showToast('Error al eliminar: ' + error.message, 'error'); return; }
   showToast('Usuario eliminado', 'success');
   cerrarModalPersDelete();
