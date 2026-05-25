@@ -779,7 +779,7 @@ window.buscarProducto = async () => {
       productos ( id_producto, nombre, codigo_barras, barcode, categoria, category, descripcion, precio ),
       sucursales ( nombre )
     `)
-    .or(`productos.codigo_barras.eq.${codigo},productos.barcode.eq.${codigo},productos.id_producto.eq.${codigo}`)
+    .or(`productos.codigo_barras.eq.${codigo},productos.id_producto.eq.${codigo}`)
     .limit(1)
     .maybeSingle();
 
@@ -788,7 +788,7 @@ window.buscarProducto = async () => {
     const { data: prod } = await supabase
       .from('productos')
       .select('*')
-      .or(`codigo_barras.eq.${codigo},barcode.eq.${codigo},id.eq.${codigo}`)
+      .or(`codigo_barras.eq.${codigo},id_producto.eq.${codigo}`)
       .limit(1)
       .maybeSingle();
 
@@ -937,7 +937,7 @@ window.ejecutarOperacion = async () => {
   const prod = productoActivo.productos;
   await supabase.from('movimientos_inventario').insert({
     id_stock:       productoActivo.id_stock,
-    id_producto:    prod?.id_producto || prod?.id || productoActivo._prodId,
+    id_producto:    prod?.id_producto || productoActivo._prodId,
     tipo_movimiento: modoActual,
     cantidad:       qty,
     stock_anterior: stockAnt,
@@ -1209,7 +1209,7 @@ window.guardarNuevoProducto = async () => {
   // 1. Insertar en productos
   const { data: prod, error: errProd } = await supabase
     .from('productos')
-    .insert({ nombre, codigo_barras: barcode, precio, categoria, descripcion, stock })
+    .insert({ nombre, codigo_barras: barcode, precio_venta_actual: parseFloat(document.getElementById('np-precio').value)||0, categoria, descripcion, stock })
     .select()
     .single();
 
