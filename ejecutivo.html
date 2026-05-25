@@ -883,19 +883,19 @@ function renderTablaProductos(lista) {
     let stockClass = 'stock-ok', stockLabel = stock;
     if (stock === 0) { stockClass='stock-zero'; stockLabel='Sin stock'; }
     else if (stock < 10) { stockClass='stock-low'; }
-    const precio = Number(p.precio || p.precio_unitario || 0);
+    const precio = Number(p.precio_venta_actual || 0);
     const cat = p.categoria || p.category || '—';
     return `<tr>
-      <td style="color:var(--text-muted);">${p.id}</td>
-      <td><strong>${p.nombre || p.name || '—'}</strong></td>
+      <td style="color:var(--text-muted);">${p.id_producto}</td>
+      <td><strong>${p.nombre || '—'}</strong></td>
       <td style="font-size:0.82rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.descripcion || p.description || '—'}</td>
       <td><strong>$${precio.toLocaleString('es-CL')}</strong></td>
       <td><span class="${stockClass}">${stockLabel}</span></td>
       <td>${cat}</td>
       <td>
         <div style="display:flex;gap:0.4rem;">
-          <button class="btn-edit"   onclick="abrirModalProducto(${p.id})">✏️</button>
-          <button class="btn-delete" onclick="abrirModalProdDelete(${p.id})">🗑️</button>
+          <button class="btn-edit"   onclick="abrirModalProducto(${p.id_producto})">✏️</button>
+          <button class="btn-delete" onclick="abrirModalProdDelete(${p.id_producto})">🗑️</button>
         </div>
       </td>
     </tr>`;
@@ -915,12 +915,12 @@ window.filtrarProductos = () => {
 };
 
 window.abrirModalProducto = (id) => {
-  const prod = id ? todosProductos.find(p => p.id === id) : null;
+  const prod = id ? todosProductos.find(p => p.id_producto === id) : null;
   document.getElementById('modal-prod-titulo').textContent = prod ? '✏️ Editar Producto' : '➕ Agregar Producto';
-  document.getElementById('prod-id').value          = prod?.id || '';
+  document.getElementById('prod-id').value          = prod?.id_producto || '';
   document.getElementById('prod-nombre').value      = prod?.nombre || prod?.name || '';
   document.getElementById('prod-descripcion').value = prod?.descripcion || prod?.description || '';
-  document.getElementById('prod-precio').value      = prod?.precio || prod?.precio_unitario || '';
+  document.getElementById('prod-precio').value      = prod?.precio_venta_actual || '';
   document.getElementById('prod-stock').value       = prod?.stock || prod?.cantidad_disponible || '';
   document.getElementById('prod-categoria').value   = prod?.categoria || prod?.category || '';
   document.getElementById('prod-imagen').value      = prod?.imagen || prod?.image_url || '';
@@ -943,15 +943,14 @@ window.guardarProducto = async () => {
   const payload = {
     nombre,
     descripcion: document.getElementById('prod-descripcion').value.trim(),
-    precio,
+    precio_venta_actual: precio,
     stock,
     categoria: document.getElementById('prod-categoria').value.trim(),
-    imagen:    document.getElementById('prod-imagen').value.trim() || null,
   };
 
   let error;
   if (id) {
-    ({ error } = await supabase.from('productos').update(payload).eq('id', id));
+    ({ error } = await supabase.from('productos').update(payload).eq('id_producto', id));
   } else {
     ({ error } = await supabase.from('productos').insert(payload));
   }
@@ -964,7 +963,7 @@ window.guardarProducto = async () => {
 
 window.abrirModalProdDelete = (id) => {
   prodDeleteId = id;
-  const prod = todosProductos.find(p => p.id === id);
+  const prod = todosProductos.find(p => p.id_producto === id);
   document.getElementById('prod-delete-info').textContent =
     `¿Seguro que deseas eliminar "${prod?.nombre || prod?.name}"? Esta acción eliminará el producto del sistema.`;
   document.getElementById('modal-prod-delete').classList.add('open');
@@ -975,7 +974,7 @@ window.cerrarModalProdDelete = () => {
 };
 window.confirmarEliminarProducto = async () => {
   if (!prodDeleteId) return;
-  const { error } = await supabase.from('productos').delete().eq('id', prodDeleteId);
+  const { error } = await supabase.from('productos').delete().eq('id_producto', prodDeleteId);
   if (error) { showToast('Error al eliminar: ' + error.message, 'error'); return; }
   showToast('Producto eliminado', 'success');
   cerrarModalProdDelete();
