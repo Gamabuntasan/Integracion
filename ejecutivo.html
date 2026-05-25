@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Ejecutivo — Medistock</title>
+<title>Logística — Medistock</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── TABS ── */
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
 .page-tabs {
   display: flex;
   gap: 0;
@@ -26,41 +28,292 @@
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .page-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* ── PRIORITY BADGE ── */
-.priority-badge {
+/* ═══════════════════════════════════════════
+   ESCÁNER — TERMINAL PRINCIPAL
+═══════════════════════════════════════════ */
+.scanner-terminal {
+  background: linear-gradient(145deg, #0d1117 0%, #161b22 100%);
+  border: 1.5px solid #30363d;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.scanner-terminal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+}
+.scanner-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #4b5563;
+  margin-bottom: 1.25rem;
+}
+.scanner-mode-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.mode-btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  border: 1.5px solid #30363d;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.mode-btn:hover { border-color: #6b7280; color: #d1d5db; }
+.mode-btn.active-entrada { border-color: #10b981; background: rgba(16,185,129,0.12); color: #10b981; }
+.mode-btn.active-salida  { border-color: #f59e0b; background: rgba(245,158,11,0.12); color: #f59e0b; }
+.mode-btn.active-ajuste  { border-color: #3b82f6; background: rgba(59,130,246,0.12); color: #3b82f6; }
+
+.barcode-input-wrap {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.barcode-input {
+  flex: 1;
+  background: #0d1117;
+  border: 2px solid #30363d;
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  color: #e6edf3;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.barcode-input:focus { border-color: #3b82f6; }
+.barcode-input::placeholder { color: #4b5563; letter-spacing: 1px; font-size: 0.85rem; }
+.barcode-scan-btn {
+  padding: 0.85rem 1.4rem;
+  background: #3b82f6;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.barcode-scan-btn:hover { background: #2563eb; }
+
+/* Tarjeta de producto encontrado */
+.product-found-card {
+  display: none;
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.product-found-card.visible { display: block; }
+.product-found-card.entrada { border-color: #10b981; }
+.product-found-card.salida  { border-color: #f59e0b; }
+.product-found-card.ajuste  { border-color: #3b82f6; }
+
+.pf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+.pf-name  { font-size: 1rem; font-weight: 700; color: #e6edf3; }
+.pf-id    { font-size: 0.75rem; color: #4b5563; font-family: monospace; }
+.pf-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.pf-stat { text-align: center; }
+.pf-stat-value { font-size: 1.4rem; font-weight: 700; color: #e6edf3; line-height: 1; }
+.pf-stat-label { font-size: 0.7rem; color: #4b5563; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.pf-stat-value.critico { color: #ef4444; }
+.pf-stat-value.ok      { color: #10b981; }
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.qty-control label { font-size: 0.8rem; color: #6b7280; font-weight: 600; min-width: 140px; }
+.qty-input {
+  width: 100px;
+  background: #0d1117;
+  border: 1.5px solid #30363d;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  color: #e6edf3;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  font-family: monospace;
+}
+.qty-input:focus { border-color: #3b82f6; }
+.qty-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #30363d;
+  background: #1c2128;
+  color: #e6edf3;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.qty-btn:hover { background: #30363d; }
+
+.nota-input {
+  width: 100%;
+  background: #0d1117;
+  border: 1.5px solid #30363d;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  color: #e6edf3;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+.nota-input::placeholder { color: #4b5563; }
+.nota-input:focus { border-color: #3b82f6; }
+
+.confirm-op-btn {
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+.confirm-op-btn.entrada { background: #10b981; color: white; }
+.confirm-op-btn.entrada:hover { background: #059669; }
+.confirm-op-btn.salida  { background: #f59e0b; color: white; }
+.confirm-op-btn.salida:hover  { background: #d97706; }
+.confirm-op-btn.ajuste  { background: #3b82f6; color: white; }
+.confirm-op-btn.ajuste:hover  { background: #2563eb; }
+
+/* Error producto no encontrado */
+.product-not-found {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(239,68,68,0.1);
+  border: 1.5px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  color: #fca5a5;
+  font-size: 0.88rem;
+  margin-bottom: 1.25rem;
+}
+.product-not-found.visible { display: flex; }
+
+/* ═══════════════════════════════════════════
+   HISTORIAL
+═══════════════════════════════════════════ */
+.historial-filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.historial-filters input,
+.historial-filters select {
+  padding: 0.55rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  background: white;
+}
+.historial-filters input:focus,
+.historial-filters select:focus { border-color: var(--accent); }
+
+.mov-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.25rem 0.7rem;
   border-radius: 100px;
   font-size: 0.72rem;
   font-weight: 700;
 }
-.priority-urgent { background: #fee2e2; color: #991b1b; }
-.priority-normal  { background: #dbeafe; color: #1e40af; }
+.mov-entrada { background: #d1fae5; color: #065f46; }
+.mov-salida  { background: #fef3c7; color: #92400e; }
+.mov-ajuste  { background: #dbeafe; color: #1e40af; }
 
-/* ── ACTION BUTTONS ── */
-.btn-approve { background: var(--success); color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.btn-approve:hover { background: #059669; }
-.btn-reject  { background: var(--danger);  color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.btn-reject:hover  { background: #dc2626; }
-.btn-derive  { background: var(--warning); color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.btn-derive:hover  { background: #d97706; }
-.btn-edit    { background: #3b82f6; color: white; border: none; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.btn-edit:hover    { background: #2563eb; }
-.btn-delete  { background: var(--danger);  color: white; border: none; padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.btn-delete:hover  { background: #dc2626; }
+/* Contador sesión */
+.session-counter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.session-stat {
+  flex: 1;
+  min-width: 120px;
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+.session-stat-value { font-size: 1.6rem; font-weight: 800; color: #e6edf3; line-height: 1; margin-bottom: 4px; }
+.session-stat-label { font-size: 0.68rem; color: #4b5563; text-transform: uppercase; letter-spacing: 1.5px; }
+.session-stat.s-entrada .session-stat-value { color: #10b981; }
+.session-stat.s-salida  .session-stat-value { color: #f59e0b; }
+.session-stat.s-ajuste  .session-stat-value { color: #3b82f6; }
 
-/* ── MODAL ── */
+/* Animación scan */
+@keyframes scanPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
+  70%  { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+  100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+}
+.scanning { animation: scanPulse 0.6s ease-out; }
+
+/* Animación éxito */
+@keyframes successFlash {
+  0%   { background: rgba(16,185,129,0.2); }
+  100% { background: transparent; }
+}
+.success-flash { animation: successFlash 0.8s ease-out; }
+
+/* Modal form */
 .modal-overlay {
   display: none;
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.6);
   z-index: 1000;
   align-items: center;
   justify-content: center;
@@ -70,25 +323,14 @@
   background: white;
   border-radius: var(--radius);
   padding: 2rem;
-  max-width: 520px;
+  max-width: 480px;
   width: 92%;
   box-shadow: var(--shadow-lg);
   max-height: 90vh;
   overflow-y: auto;
 }
-.modal-box h3 { margin-bottom: 0.5rem; }
-
-/* ── FORM FIELDS ── */
-.field-group {
-  margin-bottom: 1rem;
-}
-.field-group label {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 0.35rem;
-}
+.field-group { margin-bottom: 1rem; }
+.field-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem; }
 .field-group input,
 .field-group select,
 .field-group textarea {
@@ -98,367 +340,266 @@
   border-radius: var(--radius);
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.15s;
   font-family: inherit;
   box-sizing: border-box;
 }
 .field-group input:focus,
-.field-group select:focus,
-.field-group textarea:focus {
-  border-color: var(--accent);
-}
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-/* ── TOP BAR IN SECTION ── */
-.section-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-.section-topbar h2 {
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-/* ── SEARCH BAR ── */
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.45rem 0.9rem;
-  width: 220px;
-}
-.search-bar input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 0.85rem;
-  width: 100%;
-  font-family: inherit;
-}
-
-/* ── STOCK BADGE ── */
-.stock-ok   { color: #059669; font-weight: 700; }
-.stock-low  { color: #d97706; font-weight: 700; }
-.stock-zero { color: #dc2626; font-weight: 700; }
-
-/* ── ROLE CHIPS ── */
-.role-chip {
-  display: inline-block;
-  padding: 0.2rem 0.65rem;
-  border-radius: 100px;
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-.role-1 { background: #fef3c7; color: #92400e; }
-.role-2 { background: #dbeafe; color: #1e40af; }
-.role-3 { background: #d1fae5; color: #065f46; }
-.role-4 { background: #ede9fe; color: #5b21b6; }
-.role-5 { background: #fee2e2; color: #991b1b; }
-
-/* ── CLIMA WIDGET ── */
-#medistock-widget-container {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-}
-.mw-card {
-  background: linear-gradient(135deg, #1a2535 0%, #0f1923 100%);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 18px 22px;
-  color: #fff;
-  min-width: 220px;
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-.mw-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #06b6d4);
-}
-.mw-card-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #64748b; margin-bottom: 12px; }
-.mw-weather-main { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.mw-weather-icon { font-size: 38px; line-height: 1; filter: drop-shadow(0 0 8px rgba(59,130,246,0.5)); }
-.mw-weather-temp { font-size: 32px; font-weight: 300; color: #f1f5f9; line-height: 1; }
-.mw-weather-temp span { font-size: 16px; color: #64748b; }
-.mw-weather-city { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
-.mw-weather-desc { font-size: 12px; color: #64748b; text-transform: capitalize; }
-.mw-alert { margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-.mw-alert.invierno  { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
-.mw-alert.verano    { background: rgba(251,146,60,0.15);  border: 1px solid rgba(251,146,60,0.3); color: #fdba74; }
-.mw-alert.primavera { background: rgba(34,197,94,0.15);   border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
-.mw-alert.otono     { background: rgba(234,179,8,0.15);   border: 1px solid rgba(234,179,8,0.3); color: #fde047; }
-.mw-currency-list   { display: flex; flex-direction: column; gap: 8px; }
-.mw-currency-row    { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: rgba(255,255,255,0.04); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); transition: background 0.2s; }
-.mw-currency-row:hover { background: rgba(255,255,255,0.08); }
-.mw-currency-flag   { font-size: 18px; margin-right: 8px; }
-.mw-currency-name   { font-size: 12px; font-weight: 600; color: #e2e8f0; flex: 1; }
-.mw-currency-sub    { font-size: 10px; color: #475569; }
-.mw-currency-value  { font-size: 13px; font-weight: 700; color: #38bdf8; font-variant-numeric: tabular-nums; }
-.mw-currency-base   { font-size: 10px; color: #475569; text-align: right; }
-.mw-loading  { color: #475569; font-size: 12px; text-align: center; padding: 20px 0; animation: mw-pulse 1.5s infinite; }
-.mw-error    { color: #f87171; font-size: 11px; text-align: center; padding: 10px 0; }
-.mw-updated  { font-size: 10px; color: #334155; margin-top: 10px; text-align: right; }
-@keyframes mw-pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
-
-/* ── CONFIRM DANGER ── */
-.confirm-danger {
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  font-size: 0.85rem;
-  color: #991b1b;
-  margin-bottom: 1rem;
-}
+.field-group select:focus { border-color: var(--accent); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 </style>
 </head>
 <body>
 <div class="app-shell">
+
+  <!-- ── SIDEBAR ── -->
   <nav class="sidebar">
     <div class="sidebar-logo">MEDI<span>STOCK</span></div>
-    <div class="sidebar-section">Panel</div>
+    <div class="sidebar-section">Logística</div>
     <div class="sidebar-nav">
       <div class="nav-item active">
-        <span class="icon">📊</span> Dashboard
-      </div>
-      <div class="nav-item" onclick="window.location.href='terminal-logistica.html'">
         <span class="icon">📦</span> Inventario
       </div>
-      <div class="nav-item" onclick="window.location.href='finanzas.html'">
-        <span class="icon">💰</span> Finanzas
+      <div class="nav-item" onclick="window.location.href='ejecutivo.html'">
+        <span class="icon">📊</span> Dashboard
       </div>
     </div>
     <div class="sidebar-footer">
       <div class="user-badge">
-        <div class="user-avatar" id="user-avatar">E</div>
+        <div class="user-avatar" id="user-avatar">L</div>
         <div class="user-info">
-          <div class="name" id="user-name">Ejecutivo</div>
-          <div class="role">Administrador</div>
+          <div class="name" id="user-name">Logística</div>
+          <div class="role">Operador</div>
         </div>
       </div>
-      <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%; margin-top:0.75rem;">
+      <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%;margin-top:0.75rem;">
         Cerrar sesión
       </button>
     </div>
   </nav>
 
+  <!-- ── MAIN ── -->
   <main class="main-content">
     <div class="page-header">
       <div>
-        <div class="page-title">Panel de Control</div>
-        <div class="page-subtitle" id="fecha-actual"></div>
+        <div class="page-title">Control de Inventario</div>
+        <div class="page-subtitle">Terminal de operaciones con código de barras</div>
       </div>
-      <button class="btn btn-outline" onclick="cargarDashboard()">↻ Actualizar</button>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <div id="alerta-critico" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--danger);padding:0.5rem 1rem;border-radius:var(--radius);font-size:0.8rem;font-weight:600;">
+          ⚠️ <span id="alerta-count">0</span> producto(s) crítico(s)
+        </div>
+        <button class="btn btn-outline" onclick="cargarInventario()">↻ Actualizar</button>
+      </div>
     </div>
 
-    <!-- WIDGET CLIMA + DIVISAS -->
-    <div id="medistock-widget-container">
-      <div class="mw-card" id="mw-weather-card">
-        <div class="mw-card-title">🌍 Condición climática — Santiago</div>
-        <div class="mw-loading" id="mw-weather-loading">Cargando clima...</div>
-        <div id="mw-weather-content" style="display:none">
-          <div class="mw-weather-main">
-            <div class="mw-weather-icon" id="mw-icon">⛅</div>
+    <!-- ── TABS ── -->
+    <div class="page-tabs">
+      <button class="page-tab active" onclick="switchTab('scanner', this)">📷 Escáner</button>
+      <button class="page-tab" onclick="switchTab('inventario', this)">📋 Inventario</button>
+      <button class="page-tab" onclick="switchTab('historial', this)">
+        🕒 Historial
+        <span id="badge-movs" style="background:var(--accent);color:white;border-radius:100px;padding:1px 7px;font-size:0.7rem;margin-left:0.5rem;display:none;">0</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TAB 1 — ESCÁNER / TERMINAL
+    ══════════════════════════════════════════ -->
+    <div class="tab-content active" id="tab-scanner">
+
+      <!-- Contadores de sesión -->
+      <div class="session-counter">
+        <div class="session-stat s-entrada">
+          <div class="session-stat-value" id="cnt-entradas">0</div>
+          <div class="session-stat-label">Entradas hoy</div>
+        </div>
+        <div class="session-stat s-salida">
+          <div class="session-stat-value" id="cnt-salidas">0</div>
+          <div class="session-stat-label">Salidas hoy</div>
+        </div>
+        <div class="session-stat s-ajuste">
+          <div class="session-stat-value" id="cnt-ajustes">0</div>
+          <div class="session-stat-label">Ajustes hoy</div>
+        </div>
+        <div class="session-stat" style="background:linear-gradient(135deg,#1a2535,#0f1923);">
+          <div class="session-stat-value" id="cnt-total" style="color:#38bdf8;">0</div>
+          <div class="session-stat-label" style="color:#475569;">Operaciones totales</div>
+        </div>
+      </div>
+
+      <!-- Terminal de escaneo -->
+      <div class="scanner-terminal">
+        <div class="scanner-title">🔲 Terminal de escaneo — Medistock</div>
+
+        <!-- Selector de modo -->
+        <div style="color:#6b7280;font-size:0.78rem;font-weight:600;margin-bottom:0.6rem;">MODO DE OPERACIÓN</div>
+        <div class="scanner-mode-buttons">
+          <button class="mode-btn active-entrada" id="btn-modo-entrada" onclick="setModo('entrada')">
+            📥 Entrada de stock
+          </button>
+          <button class="mode-btn" id="btn-modo-salida" onclick="setModo('salida')">
+            📤 Salida / Despacho
+          </button>
+          <button class="mode-btn" id="btn-modo-ajuste" onclick="setModo('ajuste')">
+            🔧 Ajuste manual
+          </button>
+        </div>
+
+        <!-- Input código de barras -->
+        <div style="color:#6b7280;font-size:0.78rem;font-weight:600;margin-bottom:0.6rem;">CÓDIGO DE BARRAS / ID PRODUCTO</div>
+        <div class="barcode-input-wrap">
+          <input
+            type="text"
+            id="barcode-input"
+            class="barcode-input"
+            placeholder="Escanear o ingresar código..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button class="barcode-scan-btn" onclick="buscarProducto()" title="Buscar">
+            🔍
+          </button>
+          <button class="barcode-scan-btn" style="background:#1c2128;border:1.5px solid #30363d;" onclick="limpiarEscaner()" title="Limpiar">
+            ✕
+          </button>
+        </div>
+
+        <!-- Producto no encontrado -->
+        <div class="product-not-found" id="product-not-found">
+          <span style="font-size:1.4rem;">⚠️</span>
+          <div>
+            <strong>Producto no encontrado.</strong> Verifica el código o
+            <a href="#" onclick="abrirModalNuevoProducto(); return false;" style="color:#f87171;text-decoration:underline;">registra un nuevo producto</a>.
+          </div>
+        </div>
+
+        <!-- Tarjeta producto encontrado -->
+        <div class="product-found-card" id="product-card">
+          <div class="pf-header">
             <div>
-              <div class="mw-weather-temp" id="mw-temp">--<span>°C</span></div>
+              <div class="pf-name" id="pf-nombre">—</div>
+              <div class="pf-id" id="pf-codigo">COD: —</div>
+            </div>
+            <span id="pf-categoria" style="background:#1c2128;color:#6b7280;padding:0.3rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600;"></span>
+          </div>
+
+          <div class="pf-stats">
+            <div class="pf-stat">
+              <div class="pf-stat-value" id="pf-stock">—</div>
+              <div class="pf-stat-label">Stock actual</div>
+            </div>
+            <div class="pf-stat">
+              <div class="pf-stat-value" id="pf-critico" style="color:#6b7280;">—</div>
+              <div class="pf-stat-label">Stock crítico</div>
+            </div>
+            <div class="pf-stat">
+              <div class="pf-stat-value" id="pf-sucursal" style="color:#38bdf8;font-size:1rem;">—</div>
+              <div class="pf-stat-label">Sucursal</div>
+            </div>
+            <div class="pf-stat">
+              <div class="pf-stat-value" id="pf-resultado" style="color:#6b7280;">—</div>
+              <div class="pf-stat-label">Stock resultante</div>
             </div>
           </div>
-          <div class="mw-weather-city" id="mw-city">--</div>
-          <div class="mw-weather-desc" id="mw-desc">--</div>
-          <div class="mw-alert" id="mw-season-alert">
-            <span id="mw-season-icon">📦</span>
-            <span id="mw-season-text">--</span>
+
+          <!-- Cantidad -->
+          <div class="qty-control">
+            <label id="qty-label" style="color:#6b7280;">Cantidad a agregar:</label>
+            <button class="qty-btn" onclick="cambiarCantidad(-1)">−</button>
+            <input type="number" id="qty-input" class="qty-input" value="1" min="1" oninput="calcularResultado()">
+            <button class="qty-btn" onclick="cambiarCantidad(1)">+</button>
           </div>
-          <div class="mw-updated" id="mw-weather-updated"></div>
+
+          <!-- Nota -->
+          <textarea id="nota-op" class="nota-input" rows="2" placeholder="Nota u observación (opcional)…"></textarea>
+
+          <!-- Botón confirmar -->
+          <button class="confirm-op-btn entrada" id="btn-confirmar" onclick="ejecutarOperacion()">
+            📥 Confirmar Entrada de Stock
+          </button>
         </div>
-        <div class="mw-error" id="mw-weather-error" style="display:none">No se pudo cargar el clima</div>
+
+        <!-- Feedback último movimiento -->
+        <div id="last-op" style="display:none;margin-top:1rem;padding:1rem 1.25rem;border-radius:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#86efac;font-size:0.85rem;font-weight:600;"></div>
       </div>
-      <div class="mw-card" id="mw-currency-card">
-        <div class="mw-card-title">💱 Tipo de cambio vs CLP</div>
-        <div class="mw-loading" id="mw-currency-loading">Cargando divisas...</div>
-        <div id="mw-currency-content" style="display:none">
-          <div class="mw-currency-list" id="mw-currency-list"></div>
-          <div class="mw-updated" id="mw-currency-updated"></div>
-        </div>
-        <div class="mw-error" id="mw-currency-error" style="display:none">No se pudo cargar divisas</div>
+
+      <!-- Botón agregar producto nuevo -->
+      <div style="text-align:center;margin-top:0.5rem;">
+        <button class="btn btn-outline" onclick="abrirModalNuevoProducto()" style="font-size:0.85rem;">
+          ➕ Registrar nuevo producto en inventario
+        </button>
       </div>
     </div>
 
-    <!-- TABS -->
-    <div class="page-tabs">
-      <button class="page-tab active" onclick="switchTab('resumen', this)">📊 Resumen</button>
-      <button class="page-tab" onclick="switchTab('aprobacion', this)">
-        ✅ Aprobación
-        <span id="badge-pendientes" style="background:var(--danger);color:white;border-radius:100px;padding:1px 7px;font-size:0.7rem;margin-left:0.5rem;display:none;">0</span>
-      </button>
-      <button class="page-tab" onclick="switchTab('transacciones', this)">📋 Transacciones</button>
-      <button class="page-tab" onclick="switchTab('productos', this)">🛒 Productos</button>
-      <button class="page-tab" onclick="switchTab('personal', this)">👥 Personal</button>
-    </div>
-
-    <!-- TAB 1: RESUMEN -->
-    <div class="tab-content active" id="tab-resumen">
-      <div class="stats-grid">
-        <div class="stat-card green">
-          <div class="stat-label">Ingresos Totales</div>
-          <div class="stat-value" id="total-ventas">$—</div>
-        </div>
-        <div class="stat-card blue">
-          <div class="stat-label">Órdenes Totales</div>
-          <div class="stat-value" id="total-ordenes">—</div>
-        </div>
-        <div class="stat-card orange">
-          <div class="stat-label">Pendientes Aprobación</div>
-          <div class="stat-value" id="ordenes-pendientes">—</div>
-        </div>
-        <div class="stat-card red">
-          <div class="stat-label">Ticket Promedio</div>
-          <div class="stat-value" id="ticket-promedio">$—</div>
-        </div>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-top:1.25rem;">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Ventas por Método de Pago</span></div>
-          <div class="card-body" id="ventas-metodo"></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Ventas por Estado</span></div>
-          <div class="card-body" id="ventas-estado"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: APROBACIÓN -->
-    <div class="tab-content" id="tab-aprobacion">
-      <div style="margin-bottom:1rem;">
-        <p style="color:var(--text-muted); font-size:0.875rem;">
-          Revisa y aprueba las compras institucionales. Al aprobar, la orden se deriva automáticamente a logística.
-        </p>
+    <!-- ══════════════════════════════════════════
+         TAB 2 — INVENTARIO COMPLETO
+    ══════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-inventario">
+      <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="buscador" placeholder="🔍 Buscar producto..."
+          style="flex:1;min-width:200px;max-width:300px;padding:0.65rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.875rem;outline:none;"
+          oninput="aplicarFiltros()">
+        <select id="filtro-estado" class="btn btn-outline" style="cursor:pointer;" onchange="aplicarFiltros()">
+          <option value="">Todos los estados</option>
+          <option value="critico">Solo críticos</option>
+          <option value="normal">Solo normales</option>
+        </select>
       </div>
       <div class="card">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Orden</th><th>Cliente</th><th>Fecha</th>
-                <th>Despacho</th><th>Monto</th><th>Estado</th><th>Acciones</th>
+                <th>Producto</th>
+                <th>Sucursal</th>
+                <th>Disponible</th>
+                <th>Stock Mínimo</th>
+                <th>Estado</th>
+                <th>Acción</th>
               </tr>
             </thead>
-            <tbody id="tabla-aprobacion"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: TRANSACCIONES -->
-    <div class="tab-content" id="tab-transacciones">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Últimas Transacciones</span>
-          <select id="filtro-estado" class="btn btn-outline btn-sm" style="cursor:pointer;">
-            <option value="">Todos los estados</option>
-            <option value="Pagado">Pagado</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Despachado">Despachado</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-        </div>
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Orden</th><th>Fecha</th><th>Estado</th>
-                <th>Método</th><th>Tracking</th><th>Monto</th><th>Acción</th>
-              </tr>
-            </thead>
-            <tbody id="lista-pedidos"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================
-         TAB 4: PRODUCTOS  — NUEVO
-         ============================================================ -->
-    <div class="tab-content" id="tab-productos">
-      <div class="section-topbar">
-        <h2>🛒 Gestión de Productos</h2>
-        <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
-          <div class="search-bar">
-            <span>🔍</span>
-            <input type="text" id="search-productos" placeholder="Buscar producto…" oninput="filtrarProductos()">
-          </div>
-          <button class="btn btn-primary" onclick="abrirModalProducto(null)">+ Agregar Producto</button>
-        </div>
-      </div>
-      <div class="card">
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th><th>Nombre</th><th>Descripción</th>
-                <th>Precio</th><th>Stock</th><th>Categoría</th><th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-productos">
-              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando productos…</td></tr>
+            <tbody id="tabla-stock">
+              <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ============================================================
-         TAB 5: PERSONAL  — NUEVO
-         ============================================================ -->
-    <div class="tab-content" id="tab-personal">
-      <div class="section-topbar">
-        <h2>👥 Gestión de Personal</h2>
-        <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
-          <div class="search-bar">
-            <span>🔍</span>
-            <input type="text" id="search-personal" placeholder="Buscar usuario…" oninput="filtrarPersonal()">
-          </div>
-          <select id="filtro-rol" class="btn btn-outline btn-sm" style="cursor:pointer;" onchange="filtrarPersonal()">
-            <option value="">Todos los roles</option>
-            <option value="1">Admin</option>
-            <option value="2">Cliente</option>
-            <option value="3">Ejecutivo</option>
-            <option value="4">Logística</option>
-            <option value="5">Finanzas</option>
-          </select>
-          <button class="btn btn-primary" onclick="abrirModalPersonal(null)">+ Agregar Usuario</button>
-        </div>
+    <!-- ══════════════════════════════════════════
+         TAB 3 — HISTORIAL DE MOVIMIENTOS
+    ══════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-historial">
+      <div class="historial-filters">
+        <input type="text" id="hist-search" placeholder="🔍 Buscar producto…" oninput="filtrarHistorial()">
+        <select id="hist-tipo" onchange="filtrarHistorial()">
+          <option value="">Todos los tipos</option>
+          <option value="entrada">Entrada</option>
+          <option value="salida">Salida</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <input type="date" id="hist-fecha" onchange="filtrarHistorial()">
+        <button class="btn btn-outline btn-sm" onclick="limpiarFiltrosHistorial()">✕ Limpiar</button>
+        <span id="hist-count" style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;"></span>
       </div>
       <div class="card">
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th><th>Nombre</th><th>Email</th>
-                <th>Rol</th><th>RUT</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
+                <th>#</th>
+                <th>Fecha / Hora</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Stock antes</th>
+                <th>Stock después</th>
+                <th>Operador</th>
+                <th>Nota</th>
               </tr>
             </thead>
-            <tbody id="tabla-personal">
-              <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando personal…</td></tr>
+            <tbody id="tabla-historial">
+              <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando historial…</td></tr>
             </tbody>
           </table>
         </div>
@@ -468,188 +609,101 @@
   </main>
 </div>
 
-<!-- =========================================================
-     MODAL: APROBACIÓN DE PEDIDO (original)
-     ========================================================= -->
-<div class="modal-overlay" id="modal-aprobacion">
+<!-- ═══════════════════════════════════════════
+     MODAL: Actualizar stock (inventario tab)
+═══════════════════════════════════════════ -->
+<div id="modal-stock" class="modal-overlay">
   <div class="modal-box">
-    <h3 id="modal-titulo">Aprobar Pedido</h3>
-    <p id="modal-desc" style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;"></p>
-    <div id="modal-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1rem; margin-bottom:1.5rem; font-size:0.875rem;"></div>
+    <h3 style="margin-bottom:0.5rem;" id="modal-titulo">Actualizar Stock</h3>
+    <p id="modal-desc" style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.5rem;"></p>
     <div class="field-group">
-      <label>Nota para logística (opcional)</label>
-      <input type="text" id="nota-logistica" placeholder="Ej: Prioridad urgente, entregar antes de las 12hrs">
+      <label>Nueva cantidad disponible</label>
+      <input type="number" id="modal-cantidad" min="0" placeholder="0">
     </div>
-    <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
-      <button onclick="cerrarModal()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="ejecutarAccion()" class="btn btn-primary" style="flex:1;" id="modal-btn-accion">Confirmar</button>
+    <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+      <button onclick="cerrarModalStock()" class="btn btn-outline" style="flex:1;">Cancelar</button>
+      <button onclick="confirmarActualizarStock()" class="btn btn-primary" style="flex:1;">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- =========================================================
-     MODAL: PRODUCTO (agregar / editar) — NUEVO
-     ========================================================= -->
-<div class="modal-overlay" id="modal-producto">
+<!-- ═══════════════════════════════════════════
+     MODAL: Nuevo producto en inventario
+═══════════════════════════════════════════ -->
+<div id="modal-nuevo-producto" class="modal-overlay">
   <div class="modal-box">
-    <h3 id="modal-prod-titulo">Agregar Producto</h3>
-    <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:1.25rem;">
-      Completa los datos del producto. Todos los campos con * son obligatorios.
+    <h3>➕ Registrar Producto en Inventario</h3>
+    <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.25rem;">
+      Agrega un nuevo producto al inventario. El código de barras se usará para futuras búsquedas.
     </p>
-    <input type="hidden" id="prod-id">
     <div class="field-row">
       <div class="field-group">
-        <label>Nombre *</label>
-        <input type="text" id="prod-nombre" placeholder="Ej: Paracetamol 500mg">
+        <label>Nombre del producto *</label>
+        <input type="text" id="np-nombre" placeholder="Ej: Paracetamol 500mg">
       </div>
       <div class="field-group">
+        <label>Código de barras *</label>
+        <input type="text" id="np-barcode" placeholder="Ej: 7891234567890" style="font-family:monospace;letter-spacing:1px;">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
         <label>Categoría</label>
-        <input type="text" id="prod-categoria" placeholder="Ej: Analgésicos">
+        <input type="text" id="np-categoria" placeholder="Ej: Analgésicos">
+      </div>
+      <div class="field-group">
+        <label>Precio (CLP)</label>
+        <input type="number" id="np-precio" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Stock inicial *</label>
+        <input type="number" id="np-stock" placeholder="0" min="0">
+      </div>
+      <div class="field-group">
+        <label>Stock crítico</label>
+        <input type="number" id="np-critico" placeholder="10" min="0">
       </div>
     </div>
     <div class="field-group">
       <label>Descripción</label>
-      <textarea id="prod-descripcion" rows="2" placeholder="Descripción del producto…"></textarea>
+      <textarea id="np-descripcion" rows="2" placeholder="Descripción opcional…"></textarea>
     </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Precio (CLP) *</label>
-        <input type="number" id="prod-precio" placeholder="0" min="0">
-      </div>
-      <div class="field-group">
-        <label>Stock *</label>
-        <input type="number" id="prod-stock" placeholder="0" min="0">
-      </div>
-    </div>
-    <div class="field-group">
-      <label>URL imagen (opcional)</label>
-      <input type="text" id="prod-imagen" placeholder="https://…">
-    </div>
-    <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
-      <button onclick="cerrarModalProducto()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="guardarProducto()" class="btn btn-primary" style="flex:1;">💾 Guardar</button>
+    <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+      <button onclick="cerrarModalNuevoProducto()" class="btn btn-outline" style="flex:1;">Cancelar</button>
+      <button onclick="guardarNuevoProducto()" class="btn btn-primary" style="flex:1;">💾 Registrar</button>
     </div>
   </div>
 </div>
 
-<!-- =========================================================
-     MODAL: CONFIRMAR ELIMINAR PRODUCTO — NUEVO
-     ========================================================= -->
-<div class="modal-overlay" id="modal-prod-delete">
-  <div class="modal-box" style="max-width:400px;">
-    <h3 style="color:var(--danger);">⚠️ Eliminar Producto</h3>
-    <div class="confirm-danger" id="prod-delete-info">¿Seguro que deseas eliminar este producto?</div>
-    <p style="font-size:0.85rem; color:var(--text-muted);">Esta acción no se puede deshacer.</p>
-    <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
-      <button onclick="cerrarModalProdDelete()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="confirmarEliminarProducto()" class="btn btn-primary" style="flex:1; background:var(--danger);">Eliminar</button>
-    </div>
-  </div>
-</div>
-
-<!-- =========================================================
-     MODAL: PERSONAL (agregar / editar) — NUEVO
-     ========================================================= -->
-<div class="modal-overlay" id="modal-personal">
-  <div class="modal-box">
-    <h3 id="modal-pers-titulo">Agregar Usuario</h3>
-    <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:1.25rem;">
-      Gestiona los datos y el rol del usuario dentro del sistema.
-    </p>
-    <input type="hidden" id="pers-id">
-    <div class="field-row">
-      <div class="field-group">
-        <label>Nombre *</label>
-        <input type="text" id="pers-nombre" placeholder="Juan">
-      </div>
-      <div class="field-group">
-        <label>Apellido *</label>
-        <input type="text" id="pers-apellido" placeholder="Pérez">
-      </div>
-    </div>
-    <div class="field-group">
-      <label>Email *</label>
-      <input type="email" id="pers-email" placeholder="usuario@ejemplo.com">
-    </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>RUT</label>
-        <input type="text" id="pers-rut" placeholder="12.345.678-9">
-      </div>
-      <div class="field-group">
-        <label>Teléfono</label>
-        <input type="text" id="pers-telefono" placeholder="+56 9 1234 5678">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Rol *</label>
-        <select id="pers-rol">
-          <option value="1">Admin</option>
-          <option value="2">Cliente</option>
-          <option value="3">Ejecutivo</option>
-          <option value="4">Logística</option>
-          <option value="5">Finanzas</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label>Estado</label>
-        <select id="pers-activo">
-          <option value="true">Activo</option>
-          <option value="false">Inactivo</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
-      <button onclick="cerrarModalPersonal()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="guardarPersonal()" class="btn btn-primary" style="flex:1;">💾 Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- =========================================================
-     MODAL: CONFIRMAR ELIMINAR USUARIO — NUEVO
-     ========================================================= -->
-<div class="modal-overlay" id="modal-pers-delete">
-  <div class="modal-box" style="max-width:400px;">
-    <h3 style="color:var(--danger);">⚠️ Eliminar Usuario</h3>
-    <div class="confirm-danger" id="pers-delete-info">¿Seguro que deseas eliminar este usuario?</div>
-    <p style="font-size:0.85rem; color:var(--text-muted);">Esta acción no se puede deshacer y eliminará todos sus datos.</p>
-    <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
-      <button onclick="cerrarModalPersDelete()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="confirmarEliminarPersonal()" class="btn btn-primary" style="flex:1; background:var(--danger);">Eliminar</button>
-    </div>
-  </div>
-</div>
-
-<!-- =========================================================
+<!-- ═══════════════════════════════════════════
      SCRIPTS
-     ========================================================= -->
+═══════════════════════════════════════════ -->
 <script type="module">
 import { supabase } from './supabaseClient.js';
 import { requireAuth, cerrarSesion, showToast } from './auth.js';
 
-const auth = await requireAuth([1, 3]);
+const auth = await requireAuth([1, 2, 3, 4]);
 if (!auth) throw new Error();
 
 window.logout = () => cerrarSesion();
 
-const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
-document.getElementById('user-name').textContent = nombre;
-document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
-document.getElementById('fecha-actual').textContent =
-  new Date().toLocaleDateString('es-CL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+const nombreUsuario = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
+document.getElementById('user-name').textContent   = nombreUsuario;
+document.getElementById('user-avatar').textContent = nombreUsuario.charAt(0).toUpperCase();
 
 // ────────────────────────────────────────────
 // Estado global
 // ────────────────────────────────────────────
-let todosPedidos   = [];
-let todosProductos = [];
-let todoPersonal   = [];
-let accionPendiente   = null;
-let pedidoPendiente   = null;
-let prodDeleteId      = null;
-let persDeleteId      = null;
+let todosItems       = [];
+let todosHistorial   = [];
+let itemSeleccionado = null;   // para modal inventario
+let productoActivo   = null;   // para el escáner
+let modoActual       = 'entrada';
+
+// Contadores sesión
+let sesionContadores = { entrada: 0, salida: 0, ajuste: 0 };
 
 // ────────────────────────────────────────────
 // TABS
@@ -659,566 +713,551 @@ window.switchTab = (tab, el) => {
   document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'productos') cargarProductos();
-  if (tab === 'personal')  cargarPersonal();
+  if (tab === 'inventario') cargarInventario();
+  if (tab === 'historial')  cargarHistorial();
 };
 
 // ────────────────────────────────────────────
-// DASHBOARD / PEDIDOS
+// MODO ESCÁNER
 // ────────────────────────────────────────────
-window.cargarDashboard = async function () {
-  const { data: pedidos, error } = await supabase
-    .from('pedidos')
-    .select('*, usuarios(nombre, apellido, email)')
-    .order('id_pedido', { ascending: false });
-
-  if (error || !pedidos) return;
-  todosPedidos = pedidos;
-
-  const total     = pedidos.reduce((s, p) => s + Number(p.total_pago), 0);
-  const pendientes = pedidos.filter(p => p.estado_pedido === 'Pendiente').length;
-  const ticket     = pedidos.length > 0 ? Math.round(total / pedidos.length) : 0;
-
-  document.getElementById('total-ventas').textContent    = `$${total.toLocaleString('es-CL')}`;
-  document.getElementById('total-ordenes').textContent   = pedidos.length;
-  document.getElementById('ordenes-pendientes').textContent = pendientes;
-  document.getElementById('ticket-promedio').textContent = `$${ticket.toLocaleString('es-CL')}`;
-
-  const badge = document.getElementById('badge-pendientes');
-  badge.textContent    = pendientes;
-  badge.style.display  = pendientes > 0 ? 'inline' : 'none';
-
-  renderVentasPorGrupo('ventas-metodo', pedidos, 'metodo_pago', {
-    webpay:'💳 Webpay', transferencia:'🏦 Transferencia',
-    debito:'💳 Débito', credito:'💳 Crédito',
+window.setModo = (modo) => {
+  modoActual = modo;
+  ['entrada','salida','ajuste'].forEach(m => {
+    const btn = document.getElementById(`btn-modo-${m}`);
+    btn.className = `mode-btn${m === modo ? ` active-${m}` : ''}`;
   });
-  renderVentasPorGrupo('ventas-estado', pedidos, 'estado_pedido', {
-    'Pagado':'✅ Pagado','Pendiente':'⏳ Pendiente',
-    'Despachado':'🚚 Despachado','Cancelado':'❌ Cancelado',
-  });
-
-  renderTablaAprobacion(pedidos);
-  renderTablaTransacciones(pedidos);
+  actualizarUISegunModo();
+  limpiarResultadoEscaner();
 };
 
-function renderVentasPorGrupo(elId, pedidos, campo, labels) {
-  const grupos = {};
-  pedidos.forEach(p => {
-    const key = p[campo] || 'N/A';
-    if (!grupos[key]) grupos[key] = { count:0, total:0 };
-    grupos[key].count++;
-    grupos[key].total += Number(p.total_pago);
-  });
-  const total = pedidos.reduce((s, p) => s + Number(p.total_pago), 0);
-  const el = document.getElementById(elId);
-  el.innerHTML = Object.entries(grupos).map(([key, val]) => {
-    const pct = total > 0 ? Math.round(val.total / total * 100) : 0;
-    return `
-      <div style="margin-bottom:0.75rem;">
-        <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.25rem;">
-          <span>${labels[key] || key}</span>
-          <span style="font-weight:600;">$${val.total.toLocaleString('es-CL')} (${val.count})</span>
-        </div>
-        <div style="background:var(--border);border-radius:100px;height:6px;">
-          <div style="background:var(--accent);width:${pct}%;height:100%;border-radius:100px;transition:width 0.5s;"></div>
-        </div>
-      </div>`;
-  }).join('') || '<p style="color:var(--text-muted);font-size:0.875rem;">Sin datos</p>';
+function actualizarUISegunModo() {
+  const card = document.getElementById('product-card');
+  const btnC = document.getElementById('btn-confirmar');
+  const qLabel = document.getElementById('qty-label');
+
+  card.className = `product-found-card${productoActivo ? ' visible' : ''} ${modoActual}`;
+  btnC.className = `confirm-op-btn ${modoActual}`;
+
+  const labels = {
+    entrada: { btn: '📥 Confirmar Entrada de Stock', qty: 'Cantidad a agregar:' },
+    salida:  { btn: '📤 Confirmar Salida de Stock',  qty: 'Cantidad a descontar:' },
+    ajuste:  { btn: '🔧 Confirmar Ajuste de Stock',  qty: 'Nueva cantidad total:' },
+  };
+  btnC.textContent  = labels[modoActual].btn;
+  qLabel.textContent = labels[modoActual].qty;
+
+  if (modoActual === 'ajuste' && productoActivo) {
+    document.getElementById('qty-input').value = productoActivo.cantidad_disponible;
+    calcularResultado();
+  }
 }
 
-function renderTablaAprobacion(pedidos) {
-  const tabla = document.getElementById('tabla-aprobacion');
-  const relevantes = pedidos.filter(p => ['Pendiente','Pagado','Despachado'].includes(p.estado_pedido));
-  if (!relevantes.length) {
-    tabla.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">No hay pedidos para revisar.</td></tr>`;
+// ────────────────────────────────────────────
+// ESCÁNER — BUSCAR PRODUCTO
+// ────────────────────────────────────────────
+window.buscarProducto = async () => {
+  const codigo = document.getElementById('barcode-input').value.trim();
+  if (!codigo) return;
+
+  const inputEl = document.getElementById('barcode-input');
+  inputEl.classList.add('scanning');
+  setTimeout(() => inputEl.classList.remove('scanning'), 600);
+
+  // Ocultar errores previos
+  document.getElementById('product-not-found').classList.remove('visible');
+  document.getElementById('product-card').classList.remove('visible');
+  document.getElementById('last-op').style.display = 'none';
+  productoActivo = null;
+
+  // Buscar en inventario_detalle JOIN productos por código de barras o id_producto
+  const { data, error } = await supabase
+    .from('inventario_detalle')
+    .select(`
+      id_stock,
+      cantidad_disponible,
+      stock_critico,
+      productos ( id_producto, nombre, codigo_barras, categoria, descripcion, precio_venta_actual ),
+      sucursales ( nombre )
+    `)
+    .or(`productos.codigo_barras.eq.${codigo},productos.id_producto.eq.${codigo}`)
+    .limit(1)
+    .maybeSingle();
+
+  // Fallback: buscar en tabla productos directamente si no está en inventario_detalle
+  if (!data) {
+    const { data: prod } = await supabase
+      .from('productos')
+      .select('*')
+      .or(`codigo_barras.eq.${codigo},id_producto.eq.${codigo}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (!prod) {
+      // Último fallback: buscar por nombre parcial
+      const { data: prodNombre } = await supabase
+        .from('inventario_detalle')
+        .select(`id_stock, cantidad_disponible, stock_critico, productos(id_producto, nombre, codigo_barras, categoria, descripcion, precio_venta_actual), sucursales(nombre)`)
+        .ilike('productos.nombre', `%${codigo}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (!prodNombre) {
+        document.getElementById('product-not-found').classList.add('visible');
+        // Pre-llenar el modal de nuevo producto con el código
+        document.getElementById('np-barcode').value = codigo;
+        return;
+      }
+      mostrarProductoEncontrado(prodNombre);
+      return;
+    }
+    // Producto existe en catálogo pero no en inventario_detalle → crear registro
+    mostrarProductoDesdeProductos(prod, codigo);
     return;
   }
-  const estadoBadges = { Pagado:'badge-success', Pendiente:'badge-warning', Despachado:'badge-info', Cancelado:'badge-danger' };
-  tabla.innerHTML = relevantes.map(p => {
-    const cliente = p.usuarios ? `${p.usuarios.nombre} ${p.usuarios.apellido}` : '—';
-    const fecha   = p.created_at ? new Date(p.created_at).toLocaleDateString('es-CL') : '—';
-    const despacho = p.tipo_despacho === 'express'
-      ? '<span style="color:var(--warning);">⚡ Express</span>' : '📦 Normal';
-    const badge = estadoBadges[p.estado_pedido] || 'badge-info';
-    let acciones = '';
-    if (p.estado_pedido === 'Pendiente') {
-      acciones = `<div style="display:flex;gap:0.5rem;">
-        <button class="btn-approve" onclick="abrirModal(${p.id_pedido},'aprobar')">✓ Aprobar</button>
-        <button class="btn-reject"  onclick="abrirModal(${p.id_pedido},'rechazar')">✕ Rechazar</button>
-      </div>`;
-    } else if (p.estado_pedido === 'Pagado') {
-      acciones = `<button class="btn-derive" onclick="abrirModal(${p.id_pedido},'derivar')">→ Derivar</button>`;
-    } else {
-      acciones = `<span class="badge badge-info">En proceso</span>`;
-    }
-    return `<tr>
-      <td><strong>#${String(p.id_pedido).padStart(5,'0')}</strong></td>
-      <td>${cliente}</td>
-      <td style="color:var(--text-muted);">${fecha}</td>
-      <td>${despacho}</td>
-      <td><strong>$${Number(p.total_pago).toLocaleString('es-CL')}</strong></td>
-      <td><span class="badge ${badge}">${p.estado_pedido}</span></td>
-      <td>${acciones}</td>
-    </tr>`;
-  }).join('');
+
+  mostrarProductoEncontrado(data);
+};
+
+function mostrarProductoEncontrado(item) {
+  productoActivo = item;
+  const prod  = item.productos;
+  const stock = item.cantidad_disponible;
+  const esCrit = stock <= item.stock_critico;
+
+  document.getElementById('pf-nombre').textContent    = prod?.nombre || '—';
+  document.getElementById('pf-codigo').textContent    = `COD: ${prod?.codigo_barras || prod?.barcode || item.id_stock}`;
+  document.getElementById('pf-categoria').textContent = prod?.categoria || prod?.category || 'Sin categoría';
+  document.getElementById('pf-stock').textContent     = stock;
+  document.getElementById('pf-stock').className       = `pf-stat-value ${esCrit ? 'critico' : 'ok'}`;
+  document.getElementById('pf-critico').textContent   = item.stock_critico;
+  document.getElementById('pf-sucursal').textContent  = item.sucursales?.nombre || 'Principal';
+
+  const card = document.getElementById('product-card');
+  card.className = `product-found-card visible ${modoActual}`;
+
+  // Cantidad por defecto
+  if (modoActual === 'ajuste') {
+    document.getElementById('qty-input').value = stock;
+  } else {
+    document.getElementById('qty-input').value = 1;
+  }
+
+  calcularResultado();
+  actualizarUISegunModo();
+  document.getElementById('qty-input').focus();
 }
 
-function renderTablaTransacciones(pedidos) {
-  const estadoBadges = { Pagado:'badge-success', Pendiente:'badge-warning', Despachado:'badge-info', Cancelado:'badge-danger' };
-  const metodosLabel = { webpay:'💳 Webpay', transferencia:'🏦 Transferencia', debito:'💳 Débito', credito:'💳 Crédito' };
-  document.getElementById('lista-pedidos').innerHTML = pedidos.map(p => {
-    const badge   = estadoBadges[p.estado_pedido] || 'badge-info';
-    const fecha   = p.created_at ? new Date(p.created_at).toLocaleDateString('es-CL') : '—';
-    const metodo  = metodosLabel[p.metodo_pago] || p.metodo_pago || '—';
-    const tracking = p.tracking_number
-      ? `<code style="font-size:0.75rem;background:var(--surface-2);padding:2px 6px;border-radius:4px;">${p.tracking_number}</code>`
-      : '—';
-    return `<tr>
-      <td><strong>#${String(p.id_pedido).padStart(5,'0')}</strong></td>
-      <td style="color:var(--text-muted);">${fecha}</td>
-      <td><span class="badge ${badge}">${p.estado_pedido}</span></td>
-      <td>${metodo}</td>
-      <td>${tracking}</td>
-      <td><strong>$${Number(p.total_pago).toLocaleString('es-CL')}</strong></td>
-      <td>
-        <select onchange="cambiarEstado(${p.id_pedido}, this.value)" class="btn btn-outline btn-sm" style="cursor:pointer;">
-          <option value="">Cambiar estado</option>
-          <option value="Pagado">Pagado</option>
-          <option value="Despachado">Despachado</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
-      </td>
-    </tr>`;
-  }).join('');
+function mostrarProductoDesdeProductos(prod, codigo) {
+  // Producto en catálogo sin registro en inventario_detalle
+  // Creamos un objeto compatible
+  productoActivo = {
+    id_stock: null,
+    cantidad_disponible: prod.stock || prod.cantidad_disponible || 0,
+    stock_critico: 10,
+    _prodId: prod.id_producto,
+    productos: { ...prod },
+    sucursales: { nombre: 'Principal' }
+  };
+  mostrarProductoEncontrado(productoActivo);
 }
 
-document.getElementById('filtro-estado').addEventListener('change', e => {
-  const f = e.target.value;
-  renderTablaTransacciones(f ? todosPedidos.filter(p => p.estado_pedido === f) : todosPedidos);
+// ────────────────────────────────────────────
+// ESCÁNER — CALCULAR RESULTADO
+// ────────────────────────────────────────────
+window.calcularResultado = () => {
+  if (!productoActivo) return;
+  const qty     = parseInt(document.getElementById('qty-input').value) || 0;
+  const stockAct = productoActivo.cantidad_disponible;
+  let resultado;
+
+  if (modoActual === 'entrada')       resultado = stockAct + qty;
+  else if (modoActual === 'salida')   resultado = Math.max(0, stockAct - qty);
+  else                                resultado = qty; // ajuste
+
+  const el = document.getElementById('pf-resultado');
+  el.textContent = resultado;
+  el.style.color = resultado <= productoActivo.stock_critico ? '#ef4444' : '#10b981';
+};
+
+window.cambiarCantidad = (delta) => {
+  const input = document.getElementById('qty-input');
+  const val   = Math.max(modoActual === 'ajuste' ? 0 : 1, (parseInt(input.value) || 0) + delta);
+  input.value = val;
+  calcularResultado();
+};
+
+// ────────────────────────────────────────────
+// ESCÁNER — EJECUTAR OPERACIÓN
+// ────────────────────────────────────────────
+window.ejecutarOperacion = async () => {
+  if (!productoActivo) return;
+
+  const qty      = parseInt(document.getElementById('qty-input').value) || 0;
+  const nota     = document.getElementById('nota-op').value.trim();
+  const stockAnt = productoActivo.cantidad_disponible;
+
+  if (qty <= 0 && modoActual !== 'ajuste') {
+    showToast('La cantidad debe ser mayor a 0', 'error');
+    return;
+  }
+
+  let nuevoStock;
+  if (modoActual === 'entrada')     nuevoStock = stockAnt + qty;
+  else if (modoActual === 'salida') nuevoStock = Math.max(0, stockAnt - qty);
+  else                               nuevoStock = qty;
+
+  const btnC = document.getElementById('btn-confirmar');
+  btnC.disabled    = true;
+  btnC.textContent = '⏳ Guardando…';
+
+  let error;
+
+  // 1. Actualizar stock en inventario_detalle
+  if (productoActivo.id_stock) {
+    ({ error } = await supabase
+      .from('inventario_detalle')
+      .update({ cantidad_disponible: nuevoStock })
+      .eq('id_stock', productoActivo.id_stock));
+  } else if (productoActivo._prodId) {
+    // Actualizar en tabla productos directamente
+    ({ error } = await supabase
+      .from('productos')
+      .update({ stock: nuevoStock })
+      .eq('id_producto', productoActivo._prodId));
+  }
+
+  if (error) {
+    showToast('Error al actualizar stock: ' + error.message, 'error');
+    btnC.disabled = false;
+    actualizarUISegunModo();
+    return;
+  }
+
+  // 2. Registrar en historial
+  const prod = productoActivo.productos;
+  await supabase.from('movimientos_inventario').insert({
+    id_stock:       productoActivo.id_stock,
+    id_producto:    prod?.id_producto || productoActivo._prodId,
+    tipo_movimiento: modoActual,
+    cantidad:       qty,
+    stock_anterior: stockAnt,
+    stock_nuevo:    nuevoStock,
+    nota:           nota || null,
+    operador:       nombreUsuario,
+    created_at:     new Date().toISOString(),
+  }).then(() => {}); // no blocking si falla
+
+  // 3. Feedback visual
+  const msgs = {
+    entrada: `✅ Entrada registrada: +${qty} u. → Stock: ${nuevoStock}`,
+    salida:  `📤 Salida registrada: −${qty} u. → Stock: ${nuevoStock}`,
+    ajuste:  `🔧 Ajuste guardado: Stock ajustado a ${nuevoStock} u.`,
+  };
+  const lastOp = document.getElementById('last-op');
+  lastOp.textContent   = msgs[modoActual];
+  lastOp.style.display = 'block';
+  lastOp.className     = '';
+  lastOp.style.background = modoActual === 'salida'
+    ? 'rgba(245,158,11,0.1)' : modoActual === 'ajuste'
+    ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)';
+  lastOp.style.border = `1px solid ${modoActual === 'salida' ? 'rgba(245,158,11,0.2)' : modoActual === 'ajuste' ? 'rgba(59,130,246,0.2)' : 'rgba(16,185,129,0.2)'}`;
+  lastOp.style.color  = modoActual === 'salida' ? '#fde68a' : modoActual === 'ajuste' ? '#93c5fd' : '#86efac';
+
+  showToast(msgs[modoActual].replace(/[✅📤🔧]/g,'').trim(), 'success');
+
+  // 4. Actualizar contadores
+  sesionContadores[modoActual]++;
+  actualizarContadores();
+
+  // 5. Limpiar para siguiente escaneo
+  setTimeout(() => {
+    limpiarEscaner();
+    document.getElementById('barcode-input').focus();
+  }, 1800);
+};
+
+function actualizarContadores() {
+  document.getElementById('cnt-entradas').textContent = sesionContadores.entrada;
+  document.getElementById('cnt-salidas').textContent  = sesionContadores.salida;
+  document.getElementById('cnt-ajustes').textContent  = sesionContadores.ajuste;
+  document.getElementById('cnt-total').textContent    =
+    sesionContadores.entrada + sesionContadores.salida + sesionContadores.ajuste;
+}
+
+window.limpiarEscaner = () => {
+  document.getElementById('barcode-input').value = '';
+  limpiarResultadoEscaner();
+};
+
+function limpiarResultadoEscaner() {
+  document.getElementById('product-card').classList.remove('visible','entrada','salida','ajuste');
+  document.getElementById('product-not-found').classList.remove('visible');
+  document.getElementById('nota-op').value = '';
+  document.getElementById('qty-input').value = 1;
+  document.getElementById('pf-resultado').textContent = '—';
+  productoActivo = null;
+  const btnC = document.getElementById('btn-confirmar');
+  btnC.disabled = false;
+  actualizarUISegunModo();
+}
+
+// Enter en el input de barcode = buscar
+document.getElementById('barcode-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscarProducto();
 });
 
-// ── modal aprobación ──
-window.abrirModal = async (idPedido, accion) => {
-  pedidoPendiente  = idPedido;
-  accionPendiente  = accion;
-  const pedido  = todosPedidos.find(p => p.id_pedido === idPedido);
-  const cliente = pedido?.usuarios ? `${pedido.usuarios.nombre} ${pedido.usuarios.apellido}` : `#${String(idPedido).padStart(5,'0')}`;
-  const titulos = { aprobar:'✅ Aprobar Pedido', rechazar:'❌ Rechazar Pedido', derivar:'🚚 Derivar a Logística' };
-  const descs   = {
-    aprobar: `Estás aprobando el pedido de ${cliente} por $${Number(pedido?.total_pago||0).toLocaleString('es-CL')}. El estado cambiará a "Pagado".`,
-    rechazar:`Estás rechazando el pedido de ${cliente}. El estado cambiará a "Cancelado".`,
-    derivar: `Estás derivando el pedido de ${cliente} a logística. El estado cambiará a "Despachado".`,
-  };
-  const btnColors = { aprobar:'var(--success)', rechazar:'var(--danger)', derivar:'var(--warning)' };
-  document.getElementById('modal-titulo').textContent      = titulos[accion];
-  document.getElementById('modal-desc').textContent        = descs[accion];
-  document.getElementById('modal-btn-accion').style.background = btnColors[accion];
-  const { data: detalle } = await supabase
-    .from('detalle_pedido')
-    .select('cantidad, precio_unitario, productos(nombre)')
-    .eq('id_pedido', idPedido);
-  if (detalle?.length) {
-    document.getElementById('modal-detalle').innerHTML = detalle.map(d =>
-      `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid var(--border);">
-        <span>${d.productos?.nombre}</span>
-        <span style="font-weight:600;">x${d.cantidad} — $${(Number(d.precio_unitario)*d.cantidad).toLocaleString('es-CL')}</span>
-      </div>`
-    ).join('');
-  } else {
-    document.getElementById('modal-detalle').innerHTML = '<p style="color:var(--text-muted);">Sin detalle disponible</p>';
-  }
-  document.getElementById('modal-aprobacion').classList.add('open');
-};
-window.cerrarModal = () => {
-  document.getElementById('modal-aprobacion').classList.remove('open');
-  pedidoPendiente = null; accionPendiente = null;
-};
-window.ejecutarAccion = async () => {
-  if (!pedidoPendiente || !accionPendiente) return;
-  const estadoNuevo = { aprobar:'Pagado', rechazar:'Cancelado', derivar:'Despachado' }[accionPendiente];
-  const { error } = await supabase.from('pedidos').update({ estado_pedido: estadoNuevo }).eq('id_pedido', pedidoPendiente);
-  if (error) { showToast('Error al actualizar el pedido','error'); return; }
-  const msgs = {
-    aprobar: `Pedido #${String(pedidoPendiente).padStart(5,'0')} aprobado ✅`,
-    rechazar:`Pedido #${String(pedidoPendiente).padStart(5,'0')} rechazado`,
-    derivar: `Pedido #${String(pedidoPendiente).padStart(5,'0')} derivado a logística 🚚`,
-  };
-  showToast(msgs[accionPendiente], accionPendiente==='rechazar'?'error':'success');
-  cerrarModal();
-  cargarDashboard();
-};
-window.cambiarEstado = async (idPedido, nuevoEstado) => {
-  if (!nuevoEstado) return;
-  const { error } = await supabase.from('pedidos').update({ estado_pedido: nuevoEstado }).eq('id_pedido', idPedido);
-  if (!error) cargarDashboard();
-};
+// ────────────────────────────────────────────
+// INVENTARIO COMPLETO (Tab 2)
+// ────────────────────────────────────────────
+window.cargarInventario = async function () {
+  const tabla = document.getElementById('tabla-stock');
+  tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando...</td></tr>`;
 
-// ────────────────────────────────────────────
-// PRODUCTOS — NUEVO
-// ────────────────────────────────────────────
-async function cargarProductos() {
   const { data, error } = await supabase
-    .from('productos')
-    .select('*')
-    .order('id_usuario', { ascending: false });
+    .from('inventario_detalle')
+    .select(`id_stock, cantidad_disponible, stock_critico, productos(id_producto, nombre), sucursales(nombre)`);
 
-  if (error) {
-    document.getElementById('tabla-productos').innerHTML =
-      `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--danger);">Error al cargar productos.</td></tr>`;
+  if (error || !data) {
+    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger);">Error: ${error?.message || 'sin datos'}</td></tr>`;
     return;
   }
-  todosProductos = data || [];
-  renderTablaProductos(todosProductos);
-}
+  todosItems = data;
 
-function renderTablaProductos(lista) {
-  const tbody = document.getElementById('tabla-productos');
-  if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">No hay productos registrados.</td></tr>`;
+  const criticos = data.filter(i => i.cantidad_disponible <= i.stock_critico).length;
+  const alertaEl = document.getElementById('alerta-critico');
+  alertaEl.style.display = criticos > 0 ? 'flex' : 'none';
+  document.getElementById('alerta-count').textContent = criticos;
+
+  renderTabla(data);
+};
+
+function renderTabla(items) {
+  const tabla = document.getElementById('tabla-stock');
+  if (!items?.length) {
+    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No hay registros.</td></tr>`;
     return;
   }
-  tbody.innerHTML = lista.map(p => {
-    const stock = Number(p.stock ?? p.cantidad_disponible ?? 0);
-    let stockClass = 'stock-ok', stockLabel = stock;
-    if (stock === 0) { stockClass='stock-zero'; stockLabel='Sin stock'; }
-    else if (stock < 10) { stockClass='stock-low'; }
-    const precio = Number(p.precio_venta_actual || 0);
-    const cat = p.categoria || p.category || '—';
+  tabla.innerHTML = items.map(item => {
+    const esCritico  = item.cantidad_disponible <= item.stock_critico;
+    const nombreProd = (item.productos?.nombre || '—').replace(/'/g, "\\'");
     return `<tr>
-      <td style="color:var(--text-muted);">${p.id_producto}</td>
-      <td><strong>${p.nombre || '—'}</strong></td>
-      <td style="font-size:0.82rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.descripcion || p.description || '—'}</td>
-      <td><strong>$${precio.toLocaleString('es-CL')}</strong></td>
-      <td><span class="${stockClass}">${stockLabel}</span></td>
-      <td>${cat}</td>
+      <td><strong>${item.productos?.nombre || '—'}</strong></td>
+      <td style="color:var(--text-muted);">${item.sucursales?.nombre || '—'}</td>
+      <td><strong style="color:${esCritico?'var(--danger)':'var(--text)'};">${item.cantidad_disponible}</strong></td>
+      <td style="color:var(--text-muted);">${item.stock_critico}</td>
+      <td>${esCritico
+        ? '<span class="badge badge-danger">⚠ CRÍTICO</span>'
+        : '<span class="badge badge-success">Normal</span>'
+      }</td>
       <td>
-        <div style="display:flex;gap:0.4rem;">
-          <button class="btn-edit"   onclick="abrirModalProducto(${p.id_producto})">✏️</button>
-          <button class="btn-delete" onclick="abrirModalProdDelete(${p.id_producto})">🗑️</button>
-        </div>
+        <button class="btn btn-outline btn-sm"
+          onclick="abrirModalStock(${item.id_stock}, '${nombreProd}', ${item.cantidad_disponible})">
+          Actualizar
+        </button>
       </td>
     </tr>`;
   }).join('');
 }
 
-window.filtrarProductos = () => {
-  const q = document.getElementById('search-productos').value.toLowerCase();
-  renderTablaProductos(q
-    ? todosProductos.filter(p =>
-        (p.nombre||p.name||'').toLowerCase().includes(q) ||
-        (p.categoria||'').toLowerCase().includes(q) ||
-        (p.descripcion||p.description||'').toLowerCase().includes(q)
-      )
-    : todosProductos
-  );
+window.aplicarFiltros = () => {
+  const q      = document.getElementById('buscador').value.toLowerCase();
+  const estado = document.getElementById('filtro-estado').value;
+  renderTabla(todosItems.filter(i => {
+    const nom       = (i.productos?.nombre || '').toLowerCase();
+    const matchQ    = nom.includes(q);
+    const matchEst  = !estado
+      || (estado === 'critico' && i.cantidad_disponible <= i.stock_critico)
+      || (estado === 'normal'  && i.cantidad_disponible > i.stock_critico);
+    return matchQ && matchEst;
+  }));
 };
 
-window.abrirModalProducto = (id) => {
-  const prod = id ? todosProductos.find(p => p.id_producto === id) : null;
-  document.getElementById('modal-prod-titulo').textContent = prod ? '✏️ Editar Producto' : '➕ Agregar Producto';
-  document.getElementById('prod-id').value          = prod?.id_producto || '';
-  document.getElementById('prod-nombre').value      = prod?.nombre || prod?.name || '';
-  document.getElementById('prod-descripcion').value = prod?.descripcion || prod?.description || '';
-  document.getElementById('prod-precio').value      = prod?.precio_venta_actual || '';
-  document.getElementById('prod-stock').value       = prod?.stock || prod?.cantidad_disponible || '';
-  document.getElementById('prod-categoria').value   = prod?.categoria || prod?.category || '';
-  document.getElementById('prod-imagen').value      = prod?.imagen || prod?.image_url || '';
-  document.getElementById('modal-producto').classList.add('open');
+// Modal inventario
+window.abrirModalStock = (idStock, nombreProducto, cantidadActual) => {
+  itemSeleccionado = idStock;
+  document.getElementById('modal-titulo').textContent = `Actualizar: ${nombreProducto}`;
+  document.getElementById('modal-desc').textContent   = `Cantidad actual: ${cantidadActual} unidades`;
+  document.getElementById('modal-cantidad').value     = cantidadActual;
+  document.getElementById('modal-stock').classList.add('open');
 };
-window.cerrarModalProducto = () => {
-  document.getElementById('modal-producto').classList.remove('open');
+window.cerrarModalStock = () => {
+  document.getElementById('modal-stock').classList.remove('open');
+  itemSeleccionado = null;
 };
-
-window.guardarProducto = async () => {
-  const id     = document.getElementById('prod-id').value;
-  const nombre = document.getElementById('prod-nombre').value.trim();
-  const precio = parseFloat(document.getElementById('prod-precio').value);
-  const stock  = parseInt(document.getElementById('prod-stock').value);
-
-  if (!nombre) { showToast('El nombre es obligatorio','error'); return; }
-  if (isNaN(precio)) { showToast('El precio no es válido','error'); return; }
-  if (isNaN(stock))  { showToast('El stock no es válido','error'); return; }
-
-  const payload = {
-    nombre,
-    descripcion: document.getElementById('prod-descripcion').value.trim(),
-    precio_venta_actual: precio,
-    stock,
-    categoria: document.getElementById('prod-categoria').value.trim(),
-  };
-
-  let error;
-  if (id) {
-    ({ error } = await supabase.from('productos').update(payload).eq('id_producto', id));
-  } else {
-    ({ error } = await supabase.from('productos').insert(payload));
-  }
-
-  if (error) { showToast('Error al guardar producto: ' + error.message, 'error'); return; }
-  showToast(id ? 'Producto actualizado ✅' : 'Producto agregado ✅', 'success');
-  cerrarModalProducto();
-  cargarProductos();
-};
-
-window.abrirModalProdDelete = (id) => {
-  prodDeleteId = id;
-  const prod = todosProductos.find(p => p.id_producto === id);
-  document.getElementById('prod-delete-info').textContent =
-    `¿Seguro que deseas eliminar "${prod?.nombre || prod?.name}"? Esta acción eliminará el producto del sistema.`;
-  document.getElementById('modal-prod-delete').classList.add('open');
-};
-window.cerrarModalProdDelete = () => {
-  document.getElementById('modal-prod-delete').classList.remove('open');
-  prodDeleteId = null;
-};
-window.confirmarEliminarProducto = async () => {
-  if (!prodDeleteId) return;
-  const { error } = await supabase.from('productos').delete().eq('id_producto', prodDeleteId);
-  if (error) { showToast('Error al eliminar: ' + error.message, 'error'); return; }
-  showToast('Producto eliminado', 'success');
-  cerrarModalProdDelete();
-  cargarProductos();
+window.confirmarActualizarStock = async () => {
+  const nuevaCantidad = parseInt(document.getElementById('modal-cantidad').value);
+  if (isNaN(nuevaCantidad) || nuevaCantidad < 0) { showToast('Ingresa una cantidad válida','error'); return; }
+  const { error } = await supabase
+    .from('inventario_detalle')
+    .update({ cantidad_disponible: nuevaCantidad })
+    .eq('id_stock', itemSeleccionado);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  showToast('Stock actualizado correctamente','success');
+  cerrarModalStock();
+  cargarInventario();
 };
 
 // ────────────────────────────────────────────
-// PERSONAL — NUEVO
+// HISTORIAL (Tab 3)
 // ────────────────────────────────────────────
-const ROLES_LABEL = { 1:'Admin', 2:'Cliente', 3:'Ejecutivo', 4:'Logística', 5:'Finanzas' };
+async function cargarHistorial() {
+  const tbody = document.getElementById('tabla-historial');
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando historial…</td></tr>`;
 
-async function cargarPersonal() {
   const { data, error } = await supabase
-    .from('usuarios')
+    .from('movimientos_inventario')
     .select('*')
-    .order('id_usuario', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(300);
 
   if (error) {
-    document.getElementById('tabla-personal').innerHTML =
-      `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--danger);">Error al cargar personal.</td></tr>`;
+    // Si la tabla no existe aún, mostrar instrucción SQL
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">
+      La tabla <code>movimientos_inventario</code> aún no existe. Ejecuta el SQL indicado en las instrucciones.
+    </td></tr>`;
     return;
   }
-  todoPersonal = data || [];
-  renderTablaPersonal(todoPersonal);
+
+  todosHistorial = data || [];
+  const badge = document.getElementById('badge-movs');
+  badge.textContent  = todosHistorial.length;
+  badge.style.display = todosHistorial.length > 0 ? 'inline' : 'none';
+
+  renderHistorial(todosHistorial);
 }
 
-function renderTablaPersonal(lista) {
-  const tbody = document.getElementById('tabla-personal');
+function renderHistorial(lista) {
+  const tbody = document.getElementById('tabla-historial');
+  document.getElementById('hist-count').textContent = `${lista.length} registro(s)`;
+
   if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No hay usuarios registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Sin movimientos registrados.</td></tr>`;
     return;
   }
-  tbody.innerHTML = lista.map(u => {
-    const rolId    = u.rol_id || u.role_id || 2;
-    const rolNombre = ROLES_LABEL[rolId] || `Rol ${rolId}`;
-    const activo   = u.activo !== false;
-    const estadoBadge = activo
-      ? `<span class="badge badge-success">Activo</span>`
-      : `<span class="badge badge-danger">Inactivo</span>`;
+
+  const tipoConfig = {
+    entrada: { label:'📥 Entrada', cls:'mov-entrada' },
+    salida:  { label:'📤 Salida',  cls:'mov-salida'  },
+    ajuste:  { label:'🔧 Ajuste',  cls:'mov-ajuste'  },
+  };
+
+  tbody.innerHTML = lista.map((m, idx) => {
+    const cfg   = tipoConfig[m.tipo_movimiento] || { label: m.tipo_movimiento, cls: '' };
+    const fecha = m.created_at ? new Date(m.created_at).toLocaleString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+    const diff  = m.tipo_movimiento === 'entrada'
+      ? `<span style="color:#10b981;">+${m.cantidad}</span>`
+      : m.tipo_movimiento === 'salida'
+      ? `<span style="color:#f59e0b;">−${m.cantidad}</span>`
+      : `<span style="color:#3b82f6;">→ ${m.cantidad}</span>`;
+
     return `<tr>
-      <td style="color:var(--text-muted);">${u.id_usuario}</td>
-      <td><strong>${u.nombre || ''} ${u.apellido || ''}</strong></td>
-      <td style="font-size:0.82rem;">${u.email || '—'}</td>
-      <td><span class="role-chip role-${rolId}">${rolNombre}</span></td>
-      <td style="font-size:0.82rem;">${u.rut || '—'}</td>
-      <td style="font-size:0.82rem;">${u.telefono || '—'}</td>
-      <td>${estadoBadge}</td>
-      <td>
-        <div style="display:flex;gap:0.4rem;">
-          <button class="btn-edit"   onclick="abrirModalPersonal(${u.id_usuario})">✏️</button>
-          <button class="btn-delete" onclick="abrirModalPersDelete(${u.id_usuario})">🗑️</button>
-        </div>
-      </td>
+      <td style="color:var(--text-muted);">${lista.length - idx}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);">${fecha}</td>
+      <td><strong>${m.nombre_producto || m.id_producto || '—'}</strong></td>
+      <td><span class="mov-badge ${cfg.cls}">${cfg.label}</span></td>
+      <td style="font-weight:700;">${diff}</td>
+      <td style="color:var(--text-muted);">${m.stock_anterior ?? '—'}</td>
+      <td style="font-weight:700;">${m.stock_nuevo ?? '—'}</td>
+      <td style="font-size:0.82rem;">${m.operador || '—'}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.nota || '—'}</td>
     </tr>`;
   }).join('');
 }
 
-window.filtrarPersonal = () => {
-  const q   = document.getElementById('search-personal').value.toLowerCase();
-  const rol = document.getElementById('filtro-rol').value;
-  let lista = todoPersonal;
-  if (rol) lista = lista.filter(u => String(u.rol_id || u.role_id) === rol);
-  if (q)   lista = lista.filter(u =>
-    (u.nombre||'').toLowerCase().includes(q) ||
-    (u.apellido||'').toLowerCase().includes(q) ||
-    (u.email||'').toLowerCase().includes(q) ||
-    (u.rut||'').toLowerCase().includes(q)
-  );
-  renderTablaPersonal(lista);
+window.filtrarHistorial = () => {
+  const q     = document.getElementById('hist-search').value.toLowerCase();
+  const tipo  = document.getElementById('hist-tipo').value;
+  const fecha = document.getElementById('hist-fecha').value;
+
+  renderHistorial(todosHistorial.filter(m => {
+    const prod   = (m.nombre_producto || String(m.id_producto || '')).toLowerCase();
+    const matchQ = !q    || prod.includes(q);
+    const matchT = !tipo || m.tipo_movimiento === tipo;
+    const matchF = !fecha || (m.created_at && m.created_at.startsWith(fecha));
+    return matchQ && matchT && matchF;
+  }));
 };
 
-window.abrirModalPersonal = (id) => {
-  const u = id ? todoPersonal.find(x => x.id_usuario === id) : null;
-  document.getElementById('modal-pers-titulo').textContent = u ? '✏️ Editar Usuario' : '➕ Agregar Usuario';
-  document.getElementById('pers-id').value       = u?.id_usuario || '';
-  document.getElementById('pers-nombre').value   = u?.nombre || '';
-  document.getElementById('pers-apellido').value = u?.apellido || '';
-  document.getElementById('pers-email').value    = u?.email || '';
-  document.getElementById('pers-rut').value      = u?.rut || '';
-  document.getElementById('pers-telefono').value = u?.telefono || '';
-  document.getElementById('pers-rol').value      = String(u?.rol_id || u?.role_id || 2);
-  document.getElementById('pers-activo').value   = String(u?.activo !== false);
-  document.getElementById('modal-personal').classList.add('open');
-};
-window.cerrarModalPersonal = () => {
-  document.getElementById('modal-personal').classList.remove('open');
+window.limpiarFiltrosHistorial = () => {
+  document.getElementById('hist-search').value = '';
+  document.getElementById('hist-tipo').value   = '';
+  document.getElementById('hist-fecha').value  = '';
+  renderHistorial(todosHistorial);
 };
 
-window.guardarPersonal = async () => {
-  const id      = document.getElementById('pers-id').value;
-  const nombre  = document.getElementById('pers-nombre').value.trim();
-  const apellido = document.getElementById('pers-apellido').value.trim();
-  const email   = document.getElementById('pers-email').value.trim();
-  const rol_id  = parseInt(document.getElementById('pers-rol').value);
-  const activo  = document.getElementById('pers-activo').value === 'true';
+// ────────────────────────────────────────────
+// MODAL: NUEVO PRODUCTO
+// ────────────────────────────────────────────
+window.abrirModalNuevoProducto = () => {
+  document.getElementById('modal-nuevo-producto').classList.add('open');
+};
+window.cerrarModalNuevoProducto = () => {
+  document.getElementById('modal-nuevo-producto').classList.remove('open');
+};
+window.guardarNuevoProducto = async () => {
+  const nombre   = document.getElementById('np-nombre').value.trim();
+  const barcode  = document.getElementById('np-barcode').value.trim();
+  const stock    = parseInt(document.getElementById('np-stock').value) || 0;
+  const critico  = parseInt(document.getElementById('np-critico').value) || 10;
+  const precio   = parseFloat(document.getElementById('np-precio').value) || 0;
+  const categoria = document.getElementById('np-categoria').value.trim();
+  const descripcion = document.getElementById('np-descripcion').value.trim();
 
   if (!nombre)  { showToast('El nombre es obligatorio','error'); return; }
-  if (!email)   { showToast('El email es obligatorio','error'); return; }
+  if (!barcode) { showToast('El código de barras es obligatorio','error'); return; }
 
-  const payload = {
-    nombre,
-    apellido,
-    email,
-    rut:      document.getElementById('pers-rut').value.trim() || null,
-    telefono: document.getElementById('pers-telefono').value.trim() || null,
-    rol_id,
-    activo,
-  };
+  // 1. Insertar en productos
+  const { data: prod, error: errProd } = await supabase
+    .from('productos')
+    .insert({ nombre, codigo_barras: barcode, precio_venta_actual: parseFloat(document.getElementById('np-precio').value)||0, categoria, descripcion, stock })
+    .select()
+    .single();
 
-  let error;
-  if (id) {
-    ({ error } = await supabase.from('usuarios').update(payload).eq('id_usuario', id));
-  } else {
-    ({ error } = await supabase.from('usuarios').insert(payload));
-  }
+  if (errProd) { showToast('Error al crear producto: ' + errProd.message, 'error'); return; }
 
-  if (error) { showToast('Error al guardar usuario: ' + error.message, 'error'); return; }
-  showToast(id ? 'Usuario actualizado ✅' : 'Usuario agregado ✅', 'success');
-  cerrarModalPersonal();
-  cargarPersonal();
-};
+  // 2. Insertar en inventario_detalle (sucursal 1 por defecto)
+  await supabase.from('inventario_detalle').insert({
+    id_producto:         prod.id_producto,
+    cantidad_disponible: stock,
+    stock_critico:       critico,
+    id_sucursal:         1,
+  });
 
-window.abrirModalPersDelete = (id) => {
-  persDeleteId = id;
-  const u = todoPersonal.find(x => x.id_usuario === id);
-  document.getElementById('pers-delete-info').textContent =
-    `¿Seguro que deseas eliminar al usuario "${u?.nombre || ''} ${u?.apellido || ''}" (${u?.email || ''})?`;
-  document.getElementById('modal-pers-delete').classList.add('open');
-};
-window.cerrarModalPersDelete = () => {
-  document.getElementById('modal-pers-delete').classList.remove('open');
-  persDeleteId = null;
-};
-window.confirmarEliminarPersonal = async () => {
-  if (!persDeleteId) return;
-  const { error } = await supabase.from('usuarios').delete().eq('id_usuario', persDeleteId);
-  if (error) { showToast('Error al eliminar: ' + error.message, 'error'); return; }
-  showToast('Usuario eliminado', 'success');
-  cerrarModalPersDelete();
-  cargarPersonal();
+  showToast(`Producto "${nombre}" registrado ✅`, 'success');
+  cerrarModalNuevoProducto();
+  cargarInventario();
+
+  // Pre-llenar el escáner con el nuevo código
+  document.getElementById('barcode-input').value = barcode;
+  switchTab('scanner', document.querySelector('.page-tab'));
+  document.querySelectorAll('.page-tab')[0].classList.add('active');
 };
 
 // ────────────────────────────────────────────
-// Init
+// Init: cargar inventario y contadores del día
 // ────────────────────────────────────────────
-cargarDashboard();
-</script>
+cargarInventario();
 
-<!-- =========================================================
-     SCRIPT WIDGET CLIMA + DIVISAS (sin cambios)
-     ========================================================= -->
-<script>
-const WEATHER_API_KEY = '81071c4c16e3f2f92f71e35121da3969';
-const EXCHANGE_API_KEY = 'd040d17cf8ea9a7ffc68dbcd';
-const CIUDAD = 'Santiago,CL';
-const SEASON_CONFIG = {
-  invierno:  { class:'invierno',  icon:'❄️', text:'Temporada alta — Antigripales, vitamina C y analgésicos' },
-  verano:    { class:'verano',    icon:'☀️', text:'Temporada alta — Protector solar, hidratantes y antihistamínicos' },
-  primavera: { class:'primavera', icon:'🌸', text:'Temporada alta — Antialérgicos y descongestionantes' },
-  otono:     { class:'otono',     icon:'🍂', text:'Prevención — Stock preventivo de vitaminas y refuerzos' }
-};
-function getEstacion(mes) {
-  if (mes>=12||mes<=2)  return 'verano';
-  if (mes>=3&&mes<=5)   return 'otono';
-  if (mes>=6&&mes<=8)   return 'invierno';
-  return 'primavera';
-}
-function getWeatherEmoji(id) {
-  if (id>=200&&id<300) return '⛈️';
-  if (id>=300&&id<600) return '🌧️';
-  if (id>=600&&id<700) return '❄️';
-  if (id>=700&&id<800) return '🌫️';
-  if (id===800)        return '☀️';
-  if (id===801)        return '🌤️';
-  if (id>=802)         return '⛅';
-  return '🌡️';
-}
-const DIVISAS = [
-  { code:'USD', flag:'🇺🇸', name:'Dólar', sub:'USD' },
-  { code:'EUR', flag:'🇪🇺', name:'Euro',  sub:'EUR' },
-  { code:'JPY', flag:'🇯🇵', name:'Yen',   sub:'JPY' },
-  { code:'GBP', flag:'🇬🇧', name:'Libra', sub:'GBP' },
-  { code:'BRL', flag:'🇧🇷', name:'Real',  sub:'BRL' }
-];
-async function loadWeather() {
-  try {
-    const res  = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CIUDAD}&appid=${WEATHER_API_KEY}&units=metric&lang=es`);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    const temp = Math.round(data.main.temp);
-    const mes  = new Date().getMonth() + 1;
-    const season = SEASON_CONFIG[getEstacion(mes)];
-    document.getElementById('mw-temp').innerHTML = `${temp}<span>°C</span>`;
-    document.getElementById('mw-icon').textContent = getWeatherEmoji(data.weather[0].id);
-    document.getElementById('mw-city').textContent = `📍 ${data.name}, Chile`;
-    document.getElementById('mw-desc').textContent = data.weather[0].description;
-    const alertEl = document.getElementById('mw-season-alert');
-    alertEl.className = `mw-alert ${season.class}`;
-    document.getElementById('mw-season-icon').textContent = season.icon;
-    document.getElementById('mw-season-text').textContent = season.text;
-    document.getElementById('mw-weather-updated').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}`;
-    document.getElementById('mw-weather-loading').style.display  = 'none';
-    document.getElementById('mw-weather-content').style.display  = 'block';
-  } catch(e) {
-    document.getElementById('mw-weather-loading').style.display = 'none';
-    document.getElementById('mw-weather-error').style.display   = 'block';
-  }
-}
-async function loadCurrency() {
-  try {
-    const res  = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_API_KEY}/latest/CLP`);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    const rates = data.conversion_rates;
-    const list  = document.getElementById('mw-currency-list');
-    list.innerHTML = '';
-    DIVISAS.forEach(d => {
-      const clpPorUnidad = Math.round(1 / rates[d.code]);
-      const row = document.createElement('div');
-      row.className = 'mw-currency-row';
-      row.innerHTML = `
-        <span class="mw-currency-flag">${d.flag}</span>
-        <div style="flex:1">
-          <div class="mw-currency-name">${d.name}</div>
-          <div class="mw-currency-base">1 ${d.sub}</div>
-        </div>
-        <div>
-          <div class="mw-currency-value">$${clpPorUnidad.toLocaleString('es-CL')}</div>
-          <div class="mw-currency-base">CLP</div>
-        </div>`;
-      list.appendChild(row);
+// Cargar contadores del día desde historial
+(async () => {
+  const hoy = new Date().toISOString().split('T')[0];
+  const { data } = await supabase
+    .from('movimientos_inventario')
+    .select('tipo_movimiento')
+    .gte('created_at', hoy + 'T00:00:00')
+    .eq('operador', nombreUsuario);
+
+  if (data) {
+    data.forEach(m => {
+      if (sesionContadores[m.tipo_movimiento] !== undefined)
+        sesionContadores[m.tipo_movimiento]++;
     });
-    document.getElementById('mw-currency-updated').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}`;
-    document.getElementById('mw-currency-loading').style.display = 'none';
-    document.getElementById('mw-currency-content').style.display = 'block';
-  } catch(e) {
-    document.getElementById('mw-currency-loading').style.display = 'none';
-    document.getElementById('mw-currency-error').style.display   = 'block';
+    actualizarContadores();
   }
-}
-loadWeather();
-loadCurrency();
-setInterval(loadWeather,  10*60*1000);
-setInterval(loadCurrency, 10*60*1000);
+})();
+
+// Focus automático en el input de barcode
+document.getElementById('barcode-input').focus();
 </script>
 </body>
 </html>
