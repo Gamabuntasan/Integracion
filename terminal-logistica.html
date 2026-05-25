@@ -776,7 +776,7 @@ window.buscarProducto = async () => {
       id_stock,
       cantidad_disponible,
       stock_critico,
-      productos ( id_producto, nombre, codigo_barras, barcode, categoria, category, descripcion, precio ),
+      productos ( id_producto, nombre, codigo_barras, categoria, descripcion, precio_venta_actual ),
       sucursales ( nombre )
     `)
     .or(`productos.codigo_barras.eq.${codigo},productos.id_producto.eq.${codigo}`)
@@ -796,7 +796,7 @@ window.buscarProducto = async () => {
       // Último fallback: buscar por nombre parcial
       const { data: prodNombre } = await supabase
         .from('inventario_detalle')
-        .select(`id_stock, cantidad_disponible, stock_critico, productos(id_producto, nombre, codigo_barras, barcode, categoria, category, descripcion, precio), sucursales(nombre)`)
+        .select(`id_stock, cantidad_disponible, stock_critico, productos(id_producto, nombre, codigo_barras, categoria, descripcion, precio_venta_actual), sucursales(nombre)`)
         .ilike('productos.nombre', `%${codigo}%`)
         .limit(1)
         .maybeSingle();
@@ -854,7 +854,7 @@ function mostrarProductoDesdeProductos(prod, codigo) {
     id_stock: null,
     cantidad_disponible: prod.stock || prod.cantidad_disponible || 0,
     stock_critico: 10,
-    _prodId: prod.id || prod.id_producto,
+    _prodId: prod.id_producto,
     productos: { ...prod },
     sucursales: { nombre: 'Principal' }
   };
@@ -923,7 +923,7 @@ window.ejecutarOperacion = async () => {
     ({ error } = await supabase
       .from('productos')
       .update({ stock: nuevoStock })
-      .eq('id', productoActivo._prodId));
+      .eq('id_producto', productoActivo._prodId));
   }
 
   if (error) {
@@ -1217,7 +1217,7 @@ window.guardarNuevoProducto = async () => {
 
   // 2. Insertar en inventario_detalle (sucursal 1 por defecto)
   await supabase.from('inventario_detalle').insert({
-    id_producto:         prod.id || prod.id_producto,
+    id_producto:         prod.id_producto,
     cantidad_disponible: stock,
     stock_critico:       critico,
     id_sucursal:         1,
