@@ -5,353 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logística — Medistock</title>
 <link rel="stylesheet" href="style.css">
-<style>
-/* ═══════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════ */
-.page-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-.page-tab {
-  padding: 0.75rem 1.25rem;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.page-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-/* ═══════════════════════════════════════════
-   ESCÁNER — TERMINAL PRINCIPAL
-═══════════════════════════════════════════ */
-.scanner-terminal {
-  background: linear-gradient(145deg, #0d1117 0%, #161b22 100%);
-  border: 1.5px solid #30363d;
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  overflow: hidden;
-}
-.scanner-terminal::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
-}
-.scanner-title {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: #4b5563;
-  margin-bottom: 1.25rem;
-}
-.scanner-mode-buttons {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-.mode-btn {
-  padding: 0.55rem 1.1rem;
-  border-radius: 8px;
-  border: 1.5px solid #30363d;
-  background: transparent;
-  color: #6b7280;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s;
-  font-family: inherit;
-}
-.mode-btn:hover { border-color: #6b7280; color: #d1d5db; }
-.mode-btn.active-entrada { border-color: #10b981; background: rgba(16,185,129,0.12); color: #10b981; }
-.mode-btn.active-salida  { border-color: #f59e0b; background: rgba(245,158,11,0.12); color: #f59e0b; }
-.mode-btn.active-ajuste  { border-color: #3b82f6; background: rgba(59,130,246,0.12); color: #3b82f6; }
-
-.barcode-input-wrap {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  margin-bottom: 1.25rem;
-}
-.barcode-input {
-  flex: 1;
-  background: #0d1117;
-  border: 2px solid #30363d;
-  border-radius: 10px;
-  padding: 0.85rem 1.1rem;
-  color: #e6edf3;
-  font-size: 1rem;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 2px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.barcode-input:focus { border-color: #3b82f6; }
-.barcode-input::placeholder { color: #4b5563; letter-spacing: 1px; font-size: 0.85rem; }
-.barcode-scan-btn {
-  padding: 0.85rem 1.4rem;
-  background: #3b82f6;
-  border: none;
-  border-radius: 10px;
-  color: white;
-  font-size: 1.3rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.barcode-scan-btn:hover { background: #2563eb; }
-
-/* Tarjeta de producto encontrado */
-.product-found-card {
-  display: none;
-  background: #161b22;
-  border: 1.5px solid #30363d;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.25rem;
-}
-.product-found-card.visible { display: block; }
-.product-found-card.entrada { border-color: #10b981; }
-.product-found-card.salida  { border-color: #f59e0b; }
-.product-found-card.ajuste  { border-color: #3b82f6; }
-
-.pf-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.85rem;
-}
-.pf-name  { font-size: 1rem; font-weight: 700; color: #e6edf3; }
-.pf-id    { font-size: 0.75rem; color: #4b5563; font-family: monospace; }
-.pf-stats {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-.pf-stat { text-align: center; }
-.pf-stat-value { font-size: 1.4rem; font-weight: 700; color: #e6edf3; line-height: 1; }
-.pf-stat-label { font-size: 0.7rem; color: #4b5563; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-.pf-stat-value.critico { color: #ef4444; }
-.pf-stat-value.ok      { color: #10b981; }
-
-.qty-control {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-.qty-control label { font-size: 0.8rem; color: #6b7280; font-weight: 600; min-width: 140px; }
-.qty-input {
-  width: 100px;
-  background: #0d1117;
-  border: 1.5px solid #30363d;
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
-  color: #e6edf3;
-  font-size: 1rem;
-  font-weight: 700;
-  text-align: center;
-  outline: none;
-  font-family: monospace;
-}
-.qty-input:focus { border-color: #3b82f6; }
-.qty-btn {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  border: 1.5px solid #30363d;
-  background: #1c2128;
-  color: #e6edf3;
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-}
-.qty-btn:hover { background: #30363d; }
-
-.nota-input {
-  width: 100%;
-  background: #0d1117;
-  border: 1.5px solid #30363d;
-  border-radius: 8px;
-  padding: 0.6rem 1rem;
-  color: #e6edf3;
-  font-size: 0.85rem;
-  outline: none;
-  font-family: inherit;
-  resize: none;
-  box-sizing: border-box;
-  margin-bottom: 1rem;
-}
-.nota-input::placeholder { color: #4b5563; }
-.nota-input:focus { border-color: #3b82f6; }
-
-.confirm-op-btn {
-  width: 100%;
-  padding: 0.9rem;
-  border-radius: 10px;
-  border: none;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-  letter-spacing: 0.5px;
-}
-.confirm-op-btn.entrada { background: #10b981; color: white; }
-.confirm-op-btn.entrada:hover { background: #059669; }
-.confirm-op-btn.salida  { background: #f59e0b; color: white; }
-.confirm-op-btn.salida:hover  { background: #d97706; }
-.confirm-op-btn.ajuste  { background: #3b82f6; color: white; }
-.confirm-op-btn.ajuste:hover  { background: #2563eb; }
-
-/* Error producto no encontrado */
-.product-not-found {
-  display: none;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(239,68,68,0.1);
-  border: 1.5px solid rgba(239,68,68,0.3);
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  color: #fca5a5;
-  font-size: 0.88rem;
-  margin-bottom: 1.25rem;
-}
-.product-not-found.visible { display: flex; }
-
-/* ═══════════════════════════════════════════
-   HISTORIAL
-═══════════════════════════════════════════ */
-.historial-filters {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.historial-filters input,
-.historial-filters select {
-  padding: 0.55rem 0.9rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.85rem;
-  outline: none;
-  font-family: inherit;
-  background: white;
-}
-.historial-filters input:focus,
-.historial-filters select:focus { border-color: var(--accent); }
-
-.mov-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.7rem;
-  border-radius: 100px;
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-.mov-entrada { background: #d1fae5; color: #065f46; }
-.mov-salida  { background: #fef3c7; color: #92400e; }
-.mov-ajuste  { background: #dbeafe; color: #1e40af; }
-
-/* Contador sesión */
-.session-counter {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-.session-stat {
-  flex: 1;
-  min-width: 120px;
-  background: #161b22;
-  border: 1.5px solid #30363d;
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  text-align: center;
-}
-.session-stat-value { font-size: 1.6rem; font-weight: 800; color: #e6edf3; line-height: 1; margin-bottom: 4px; }
-.session-stat-label { font-size: 0.68rem; color: #4b5563; text-transform: uppercase; letter-spacing: 1.5px; }
-.session-stat.s-entrada .session-stat-value { color: #10b981; }
-.session-stat.s-salida  .session-stat-value { color: #f59e0b; }
-.session-stat.s-ajuste  .session-stat-value { color: #3b82f6; }
-
-/* Animación scan */
-@keyframes scanPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
-  70%  { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
-  100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
-}
-.scanning { animation: scanPulse 0.6s ease-out; }
-
-/* Animación éxito */
-@keyframes successFlash {
-  0%   { background: rgba(16,185,129,0.2); }
-  100% { background: transparent; }
-}
-.success-flash { animation: successFlash 0.8s ease-out; }
-
-/* Modal form */
-.modal-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal-box {
-  background: white;
-  border-radius: var(--radius);
-  padding: 2rem;
-  max-width: 480px;
-  width: 92%;
-  box-shadow: var(--shadow-lg);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.field-group { margin-bottom: 1rem; }
-.field-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem; }
-.field-group input,
-.field-group select,
-.field-group textarea {
-  width: 100%;
-  padding: 0.65rem 0.85rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  outline: none;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-.field-group input:focus,
-.field-group select:focus { border-color: var(--accent); }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-</style>
 </head>
 <body>
 <div class="app-shell">
-
-  <!-- ── SIDEBAR ── -->
   <nav class="sidebar">
     <div class="sidebar-logo">MEDI<span>STOCK</span></div>
     <div class="sidebar-section">Logística</div>
@@ -371,893 +27,219 @@
           <div class="role">Operador</div>
         </div>
       </div>
-      <button onclick="logout()" class="btn btn-outline btn-sm" style="width:100%;margin-top:0.75rem;">
+      <button onclick="logout()" class="btn btn-outline btn-sm" style="width: 100%; margin-top: 0.75rem;">
         Cerrar sesión
       </button>
     </div>
   </nav>
 
-  <!-- ── MAIN ── -->
   <main class="main-content">
     <div class="page-header">
       <div>
         <div class="page-title">Control de Inventario</div>
-        <div class="page-subtitle">Terminal de operaciones con código de barras</div>
+        <div class="page-subtitle">Gestión de stock por producto y sucursal</div>
       </div>
-      <div style="display:flex;gap:0.75rem;align-items:center;">
-        <div id="alerta-critico" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--danger);padding:0.5rem 1rem;border-radius:var(--radius);font-size:0.8rem;font-weight:600;">
-          ⚠️ <span id="alerta-count">0</span> producto(s) crítico(s)
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <div id="alerta-critico" style="display:none; background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); padding: 0.5rem 1rem; border-radius: var(--radius); font-size: 0.8rem; font-weight: 600;">
+          ⚠️ <span id="alerta-count">0</span> producto(s) en stock crítico
         </div>
         <button class="btn btn-outline" onclick="cargarInventario()">↻ Actualizar</button>
       </div>
     </div>
 
-    <!-- ── TABS ── -->
-    <div class="page-tabs">
-      <button class="page-tab active" onclick="switchTab('scanner', this)">📷 Escáner</button>
-      <button class="page-tab" onclick="switchTab('inventario', this)">📋 Inventario</button>
-      <button class="page-tab" onclick="switchTab('historial', this)">
-        🕒 Historial
-        <span id="badge-movs" style="background:var(--accent);color:white;border-radius:100px;padding:1px 7px;font-size:0.7rem;margin-left:0.5rem;display:none;">0</span>
-      </button>
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+      <input type="text" id="buscador" placeholder="🔍 Buscar producto..."
+        style="flex: 1; min-width: 200px; max-width: 300px; padding: 0.65rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 0.875rem; outline: none;">
+      <select id="filtro-estado" class="btn btn-outline">
+        <option value="">Todos los estados</option>
+        <option value="critico">Solo críticos</option>
+        <option value="normal">Solo normales</option>
+      </select>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TAB 1 — ESCÁNER / TERMINAL
-    ══════════════════════════════════════════ -->
-    <div class="tab-content active" id="tab-scanner">
-
-      <!-- Contadores de sesión -->
-      <div class="session-counter">
-        <div class="session-stat s-entrada">
-          <div class="session-stat-value" id="cnt-entradas">0</div>
-          <div class="session-stat-label">Entradas hoy</div>
-        </div>
-        <div class="session-stat s-salida">
-          <div class="session-stat-value" id="cnt-salidas">0</div>
-          <div class="session-stat-label">Salidas hoy</div>
-        </div>
-        <div class="session-stat s-ajuste">
-          <div class="session-stat-value" id="cnt-ajustes">0</div>
-          <div class="session-stat-label">Ajustes hoy</div>
-        </div>
-        <div class="session-stat" style="background:linear-gradient(135deg,#1a2535,#0f1923);">
-          <div class="session-stat-value" id="cnt-total" style="color:#38bdf8;">0</div>
-          <div class="session-stat-label" style="color:#475569;">Operaciones totales</div>
-        </div>
-      </div>
-
-      <!-- Terminal de escaneo -->
-      <div class="scanner-terminal">
-        <div class="scanner-title">🔲 Terminal de escaneo — Medistock</div>
-
-        <!-- Selector de modo -->
-        <div style="color:#6b7280;font-size:0.78rem;font-weight:600;margin-bottom:0.6rem;">MODO DE OPERACIÓN</div>
-        <div class="scanner-mode-buttons">
-          <button class="mode-btn active-entrada" id="btn-modo-entrada" onclick="setModo('entrada')">
-            📥 Entrada de stock
-          </button>
-          <button class="mode-btn" id="btn-modo-salida" onclick="setModo('salida')">
-            📤 Salida / Despacho
-          </button>
-          <button class="mode-btn" id="btn-modo-ajuste" onclick="setModo('ajuste')">
-            🔧 Ajuste manual
-          </button>
-        </div>
-
-        <!-- Input código de barras -->
-        <div style="color:#6b7280;font-size:0.78rem;font-weight:600;margin-bottom:0.6rem;">CÓDIGO DE BARRAS / ID PRODUCTO</div>
-        <div class="barcode-input-wrap">
-          <input
-            type="text"
-            id="barcode-input"
-            class="barcode-input"
-            placeholder="Escanear o ingresar código..."
-            autocomplete="off"
-            spellcheck="false"
-          >
-          <button class="barcode-scan-btn" onclick="buscarProducto()" title="Buscar">
-            🔍
-          </button>
-          <button class="barcode-scan-btn" style="background:#1c2128;border:1.5px solid #30363d;" onclick="limpiarEscaner()" title="Limpiar">
-            ✕
-          </button>
-        </div>
-
-        <!-- Producto no encontrado -->
-        <div class="product-not-found" id="product-not-found">
-          <span style="font-size:1.4rem;">⚠️</span>
-          <div>
-            <strong>Producto no encontrado.</strong> Verifica el código o
-            <a href="#" onclick="abrirModalNuevoProducto(); return false;" style="color:#f87171;text-decoration:underline;">registra un nuevo producto</a>.
-          </div>
-        </div>
-
-        <!-- Tarjeta producto encontrado -->
-        <div class="product-found-card" id="product-card">
-          <div class="pf-header">
-            <div>
-              <div class="pf-name" id="pf-nombre">—</div>
-              <div class="pf-id" id="pf-codigo">COD: —</div>
-            </div>
-            <span id="pf-categoria" style="background:#1c2128;color:#6b7280;padding:0.3rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600;"></span>
-          </div>
-
-          <div class="pf-stats">
-            <div class="pf-stat">
-              <div class="pf-stat-value" id="pf-stock">—</div>
-              <div class="pf-stat-label">Stock actual</div>
-            </div>
-            <div class="pf-stat">
-              <div class="pf-stat-value" id="pf-critico" style="color:#6b7280;">—</div>
-              <div class="pf-stat-label">Stock crítico</div>
-            </div>
-            <div class="pf-stat">
-              <div class="pf-stat-value" id="pf-sucursal" style="color:#38bdf8;font-size:1rem;">—</div>
-              <div class="pf-stat-label">Sucursal</div>
-            </div>
-            <div class="pf-stat">
-              <div class="pf-stat-value" id="pf-resultado" style="color:#6b7280;">—</div>
-              <div class="pf-stat-label">Stock resultante</div>
-            </div>
-          </div>
-
-          <!-- Cantidad -->
-          <div class="qty-control">
-            <label id="qty-label" style="color:#6b7280;">Cantidad a agregar:</label>
-            <button class="qty-btn" onclick="cambiarCantidad(-1)">−</button>
-            <input type="number" id="qty-input" class="qty-input" value="1" min="1" oninput="calcularResultado()">
-            <button class="qty-btn" onclick="cambiarCantidad(1)">+</button>
-          </div>
-
-          <!-- Nota -->
-          <textarea id="nota-op" class="nota-input" rows="2" placeholder="Nota u observación (opcional)…"></textarea>
-
-          <!-- Botón confirmar -->
-          <button class="confirm-op-btn entrada" id="btn-confirmar" onclick="ejecutarOperacion()">
-            📥 Confirmar Entrada de Stock
-          </button>
-        </div>
-
-        <!-- Feedback último movimiento -->
-        <div id="last-op" style="display:none;margin-top:1rem;padding:1rem 1.25rem;border-radius:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#86efac;font-size:0.85rem;font-weight:600;"></div>
-      </div>
-
-      <!-- Botón agregar producto nuevo -->
-      <div style="text-align:center;margin-top:0.5rem;">
-        <button class="btn btn-outline" onclick="abrirModalNuevoProducto()" style="font-size:0.85rem;">
-          ➕ Registrar nuevo producto en inventario
-        </button>
+    <div class="card">
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Sucursal</th>
+              <th>Disponible</th>
+              <th>Stock Mínimo</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-stock">
+            <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Cargando...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-
-    <!-- ══════════════════════════════════════════
-         TAB 2 — INVENTARIO COMPLETO
-    ══════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-inventario">
-      <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
-        <input type="text" id="buscador" placeholder="🔍 Buscar producto..."
-          style="flex:1;min-width:200px;max-width:300px;padding:0.65rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.875rem;outline:none;"
-          oninput="aplicarFiltros()">
-        <select id="filtro-estado" class="btn btn-outline" style="cursor:pointer;" onchange="aplicarFiltros()">
-          <option value="">Todos los estados</option>
-          <option value="critico">Solo críticos</option>
-          <option value="normal">Solo normales</option>
-        </select>
-      </div>
-      <div class="card">
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Sucursal</th>
-                <th>Disponible</th>
-                <th>Stock Mínimo</th>
-                <th>Estado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-stock">
-              <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════
-         TAB 3 — HISTORIAL DE MOVIMIENTOS
-    ══════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-historial">
-      <div class="historial-filters">
-        <input type="text" id="hist-search" placeholder="🔍 Buscar producto…" oninput="filtrarHistorial()">
-        <select id="hist-tipo" onchange="filtrarHistorial()">
-          <option value="">Todos los tipos</option>
-          <option value="entrada">Entrada</option>
-          <option value="salida">Salida</option>
-          <option value="ajuste">Ajuste</option>
-        </select>
-        <input type="date" id="hist-fecha" onchange="filtrarHistorial()">
-        <button class="btn btn-outline btn-sm" onclick="limpiarFiltrosHistorial()">✕ Limpiar</button>
-        <span id="hist-count" style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;"></span>
-      </div>
-      <div class="card">
-        <div style="overflow-x:auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Fecha / Hora</th>
-                <th>Producto</th>
-                <th>Tipo</th>
-                <th>Cantidad</th>
-                <th>Stock antes</th>
-                <th>Stock después</th>
-                <th>Operador</th>
-                <th>Nota</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-historial">
-              <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando historial…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </main>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     MODAL: Actualizar stock (inventario tab)
-═══════════════════════════════════════════ -->
-<div id="modal-stock" class="modal-overlay">
-  <div class="modal-box">
+<!-- Modal -->
+<div id="modal-stock" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:white; border-radius:var(--radius); padding:2rem; max-width:400px; width:90%; box-shadow:var(--shadow-lg);">
     <h3 style="margin-bottom:0.5rem;" id="modal-titulo">Actualizar Stock</h3>
-    <p id="modal-desc" style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.5rem;"></p>
-    <div class="field-group">
+    <p id="modal-desc" style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;"></p>
+    <div class="form-group">
       <label>Nueva cantidad disponible</label>
       <input type="number" id="modal-cantidad" min="0" placeholder="0">
     </div>
-    <div style="display:flex;gap:0.75rem;margin-top:1rem;">
-      <button onclick="cerrarModalStock()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="confirmarActualizarStock()" class="btn btn-primary" style="flex:1;">Guardar</button>
+    <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+      <button id="modal-cancel" class="btn btn-outline" style="flex:1;">Cancelar</button>
+      <button id="modal-confirm" class="btn btn-primary" style="flex:1;">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     MODAL: Nuevo producto en inventario
-═══════════════════════════════════════════ -->
-<div id="modal-nuevo-producto" class="modal-overlay">
-  <div class="modal-box">
-    <h3>➕ Registrar Producto en Inventario</h3>
-    <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.25rem;">
-      Agrega un nuevo producto al inventario. El código de barras se usará para futuras búsquedas.
-    </p>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Nombre del producto *</label>
-        <input type="text" id="np-nombre" placeholder="Ej: Paracetamol 500mg">
-      </div>
-      <div class="field-group">
-        <label>Código de barras *</label>
-        <input type="text" id="np-barcode" placeholder="Ej: 7891234567890" style="font-family:monospace;letter-spacing:1px;">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Categoría</label>
-        <input type="text" id="np-categoria" placeholder="Ej: Analgésicos">
-      </div>
-      <div class="field-group">
-        <label>Precio (CLP)</label>
-        <input type="number" id="np-precio" placeholder="0" min="0">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Stock inicial *</label>
-        <input type="number" id="np-stock" placeholder="0" min="0">
-      </div>
-      <div class="field-group">
-        <label>Stock crítico</label>
-        <input type="number" id="np-critico" placeholder="10" min="0">
-      </div>
-    </div>
-    <div class="field-group">
-      <label>Descripción</label>
-      <textarea id="np-descripcion" rows="2" placeholder="Descripción opcional…"></textarea>
-    </div>
-    <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
-      <button onclick="cerrarModalNuevoProducto()" class="btn btn-outline" style="flex:1;">Cancelar</button>
-      <button onclick="guardarNuevoProducto()" class="btn btn-primary" style="flex:1;">💾 Registrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     SCRIPTS
-═══════════════════════════════════════════ -->
 <script type="module">
-import { supabase } from './supabaseClient.js';
-import { requireAuth, cerrarSesion, showToast } from './auth.js';
+  import { supabase } from './supabaseClient.js';
+  import { requireAuth, cerrarSesion, showToast } from './auth.js';
 
-const auth = await requireAuth([1, 2, 3, 4]);
-if (!auth) throw new Error();
+  const auth = await requireAuth([1, 2, 3]);
+  if (!auth) throw new Error();
 
-window.logout = () => cerrarSesion();
+  window.logout = () => cerrarSesion();
 
-const nombreUsuario = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
-document.getElementById('user-name').textContent   = nombreUsuario;
-document.getElementById('user-avatar').textContent = nombreUsuario.charAt(0).toUpperCase();
+  const nombre = sessionStorage.getItem('usuario_nombre') || auth.session.user.email;
+  document.getElementById('user-name').textContent = nombre;
+  document.getElementById('user-avatar').textContent = nombre.charAt(0).toUpperCase();
 
-// ────────────────────────────────────────────
-// Estado global
-// ────────────────────────────────────────────
-let todosItems       = [];
-let todosHistorial   = [];
-let itemSeleccionado = null;   // para modal inventario
-let productoActivo   = null;   // para el escáner
-let modoActual       = 'entrada';
+  let todosItems = [];
+  let itemSeleccionado = null;
 
-// Contadores sesión
-let sesionContadores = { entrada: 0, salida: 0, ajuste: 0 };
+  window.cargarInventario = async function () {
+    const tabla = document.getElementById('tabla-stock');
+    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Cargando...</td></tr>`;
 
-// ────────────────────────────────────────────
-// TABS
-// ────────────────────────────────────────────
-window.switchTab = (tab, el) => {
-  document.querySelectorAll('.page-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'inventario') cargarInventario();
-  if (tab === 'historial')  cargarHistorial();
-};
+    // ── Consultas separadas para evitar el error "column productos.id does not exist" ──
+    const [{ data: stockData, error }, { data: productos }, { data: sucursales }] = await Promise.all([
+      supabase.from('inventario_detalle').select('id_stock, cantidad_disponible, stock_critico, id_producto, id_sucursal'),
+      supabase.from('productos').select('id_producto, nombre'),
+      supabase.from('sucursales').select('id_sucursal, nombre'),
+    ]);
 
-// ────────────────────────────────────────────
-// MODO ESCÁNER
-// ────────────────────────────────────────────
-window.setModo = (modo) => {
-  modoActual = modo;
-  ['entrada','salida','ajuste'].forEach(m => {
-    const btn = document.getElementById(`btn-modo-${m}`);
-    btn.className = `mode-btn${m === modo ? ` active-${m}` : ''}`;
-  });
-  actualizarUISegunModo();
-  limpiarResultadoEscaner();
-};
-
-function actualizarUISegunModo() {
-  const card = document.getElementById('product-card');
-  const btnC = document.getElementById('btn-confirmar');
-  const qLabel = document.getElementById('qty-label');
-
-  card.className = `product-found-card${productoActivo ? ' visible' : ''} ${modoActual}`;
-  btnC.className = `confirm-op-btn ${modoActual}`;
-
-  const labels = {
-    entrada: { btn: '📥 Confirmar Entrada de Stock', qty: 'Cantidad a agregar:' },
-    salida:  { btn: '📤 Confirmar Salida de Stock',  qty: 'Cantidad a descontar:' },
-    ajuste:  { btn: '🔧 Confirmar Ajuste de Stock',  qty: 'Nueva cantidad total:' },
-  };
-  btnC.textContent  = labels[modoActual].btn;
-  qLabel.textContent = labels[modoActual].qty;
-
-  if (modoActual === 'ajuste' && productoActivo) {
-    document.getElementById('qty-input').value = productoActivo.cantidad_disponible;
-    calcularResultado();
-  }
-}
-
-// ────────────────────────────────────────────
-// ESCÁNER — BUSCAR PRODUCTO
-// ────────────────────────────────────────────
-window.buscarProducto = async () => {
-  const codigo = document.getElementById('barcode-input').value.trim();
-  if (!codigo) return;
-
-  const inputEl = document.getElementById('barcode-input');
-  inputEl.classList.add('scanning');
-  setTimeout(() => inputEl.classList.remove('scanning'), 600);
-
-  // Ocultar errores previos
-  document.getElementById('product-not-found').classList.remove('visible');
-  document.getElementById('product-card').classList.remove('visible');
-  document.getElementById('last-op').style.display = 'none';
-  productoActivo = null;
-
-  // Buscar en inventario_detalle JOIN productos por código de barras o id_producto
-  const { data, error } = await supabase
-    .from('inventario_detalle')
-    .select(`
-      id_stock,
-      cantidad_disponible,
-      stock_critico,
-      productos ( id_producto, nombre, codigo_barras, categoria, descripcion, precio_venta_actual ),
-      sucursales ( nombre )
-    `)
-    .or(`productos.codigo_barras.eq.${codigo},productos.id_producto.eq.${codigo}`)
-    .limit(1)
-    .maybeSingle();
-
-  // Fallback: buscar en tabla productos directamente si no está en inventario_detalle
-  if (!data) {
-    const { data: prod } = await supabase
-      .from('productos')
-      .select('*')
-      .or(`codigo_barras.eq.${codigo},id_producto.eq.${codigo}`)
-      .limit(1)
-      .maybeSingle();
-
-    if (!prod) {
-      // Último fallback: buscar por nombre parcial
-      const { data: prodNombre } = await supabase
-        .from('inventario_detalle')
-        .select(`id_stock, cantidad_disponible, stock_critico, productos(id_producto, nombre, codigo_barras, categoria, descripcion, precio_venta_actual), sucursales(nombre)`)
-        .ilike('productos.nombre', `%${codigo}%`)
-        .limit(1)
-        .maybeSingle();
-
-      if (!prodNombre) {
-        document.getElementById('product-not-found').classList.add('visible');
-        // Pre-llenar el modal de nuevo producto con el código
-        document.getElementById('np-barcode').value = codigo;
-        return;
-      }
-      mostrarProductoEncontrado(prodNombre);
+    if (error || !stockData) {
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--danger);">Error: ${error?.message || 'sin datos'}</td></tr>`;
       return;
     }
-    // Producto existe en catálogo pero no en inventario_detalle → crear registro
-    mostrarProductoDesdeProductos(prod, codigo);
-    return;
+
+    // Combinar manualmente los datos
+    const data = stockData.map(item => ({
+      ...item,
+      productos:  productos?.find(p => p.id_producto  === item.id_producto)  || null,
+      sucursales: sucursales?.find(s => s.id_sucursal === item.id_sucursal) || null,
+    }));
+
+    todosItems = data;
+
+    const criticos = data.filter(i => i.cantidad_disponible <= i.stock_critico).length;
+    const alertaEl = document.getElementById('alerta-critico');
+    alertaEl.style.display = criticos > 0 ? 'flex' : 'none';
+    document.getElementById('alerta-count').textContent = criticos;
+
+    renderTabla(data);
   }
 
-  mostrarProductoEncontrado(data);
-};
+  function renderTabla(items) {
+    const tabla = document.getElementById('tabla-stock');
+    if (!items || items.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No hay registros.</td></tr>`;
+      return;
+    }
 
-function mostrarProductoEncontrado(item) {
-  productoActivo = item;
-  const prod  = item.productos;
-  const stock = item.cantidad_disponible;
-  const esCrit = stock <= item.stock_critico;
+    tabla.innerHTML = items.map(item => {
+      const esCritico = item.cantidad_disponible <= item.stock_critico;
+      const nombreProd = (item.productos?.nombre || '—').replace(/'/g, "\\'");
 
-  document.getElementById('pf-nombre').textContent    = prod?.nombre || '—';
-  document.getElementById('pf-codigo').textContent    = `COD: ${prod?.codigo_barras || prod?.barcode || item.id_stock}`;
-  document.getElementById('pf-categoria').textContent = prod?.categoria || prod?.category || 'Sin categoría';
-  document.getElementById('pf-stock').textContent     = stock;
-  document.getElementById('pf-stock').className       = `pf-stat-value ${esCrit ? 'critico' : 'ok'}`;
-  document.getElementById('pf-critico').textContent   = item.stock_critico;
-  document.getElementById('pf-sucursal').textContent  = item.sucursales?.nombre || 'Principal';
-
-  const card = document.getElementById('product-card');
-  card.className = `product-found-card visible ${modoActual}`;
-
-  // Cantidad por defecto
-  if (modoActual === 'ajuste') {
-    document.getElementById('qty-input').value = stock;
-  } else {
-    document.getElementById('qty-input').value = 1;
+      return `<tr>
+        <td><strong>${item.productos?.nombre || '—'}</strong></td>
+        <td style="color:var(--text-muted);">${item.sucursales?.nombre || '—'}</td>
+        <td><strong style="color:${esCritico ? 'var(--danger)' : 'var(--text)'};">${item.cantidad_disponible}</strong></td>
+        <td style="color:var(--text-muted);">${item.stock_critico}</td>
+        <td>${esCritico
+          ? '<span class="badge badge-danger">⚠ CRÍTICO</span>'
+          : '<span class="badge badge-success">Normal</span>'
+        }</td>
+        <td>
+          <button class="btn btn-outline btn-sm"
+            onclick="abrirModal(${item.id_stock}, '${nombreProd}', ${item.cantidad_disponible})">
+            Actualizar
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
   }
 
-  calcularResultado();
-  actualizarUISegunModo();
-  document.getElementById('qty-input').focus();
-}
+  document.getElementById('buscador').addEventListener('input', aplicarFiltros);
+  document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
 
-function mostrarProductoDesdeProductos(prod, codigo) {
-  // Producto en catálogo sin registro en inventario_detalle
-  // Creamos un objeto compatible
-  productoActivo = {
-    id_stock: null,
-    cantidad_disponible: prod.stock || prod.cantidad_disponible || 0,
-    stock_critico: 10,
-    _prodId: prod.id_producto,
-    productos: { ...prod },
-    sucursales: { nombre: 'Principal' }
-  };
-  mostrarProductoEncontrado(productoActivo);
-}
+  function aplicarFiltros() {
+    const q = document.getElementById('buscador').value.toLowerCase();
+    const estado = document.getElementById('filtro-estado').value;
 
-// ────────────────────────────────────────────
-// ESCÁNER — CALCULAR RESULTADO
-// ────────────────────────────────────────────
-window.calcularResultado = () => {
-  if (!productoActivo) return;
-  const qty     = parseInt(document.getElementById('qty-input').value) || 0;
-  const stockAct = productoActivo.cantidad_disponible;
-  let resultado;
+    const resultado = todosItems.filter(i => {
+      const nom = (i.productos?.nombre || '').toLowerCase();
+      const matchQ = nom.includes(q);
+      const matchEstado = !estado
+        || (estado === 'critico' && i.cantidad_disponible <= i.stock_critico)
+        || (estado === 'normal'  && i.cantidad_disponible >  i.stock_critico);
+      return matchQ && matchEstado;
+    });
 
-  if (modoActual === 'entrada')       resultado = stockAct + qty;
-  else if (modoActual === 'salida')   resultado = Math.max(0, stockAct - qty);
-  else                                resultado = qty; // ajuste
-
-  const el = document.getElementById('pf-resultado');
-  el.textContent = resultado;
-  el.style.color = resultado <= productoActivo.stock_critico ? '#ef4444' : '#10b981';
-};
-
-window.cambiarCantidad = (delta) => {
-  const input = document.getElementById('qty-input');
-  const val   = Math.max(modoActual === 'ajuste' ? 0 : 1, (parseInt(input.value) || 0) + delta);
-  input.value = val;
-  calcularResultado();
-};
-
-// ────────────────────────────────────────────
-// ESCÁNER — EJECUTAR OPERACIÓN
-// ────────────────────────────────────────────
-window.ejecutarOperacion = async () => {
-  if (!productoActivo) return;
-
-  const qty      = parseInt(document.getElementById('qty-input').value) || 0;
-  const nota     = document.getElementById('nota-op').value.trim();
-  const stockAnt = productoActivo.cantidad_disponible;
-
-  if (qty <= 0 && modoActual !== 'ajuste') {
-    showToast('La cantidad debe ser mayor a 0', 'error');
-    return;
+    renderTabla(resultado);
   }
 
-  let nuevoStock;
-  if (modoActual === 'entrada')     nuevoStock = stockAnt + qty;
-  else if (modoActual === 'salida') nuevoStock = Math.max(0, stockAnt - qty);
-  else                               nuevoStock = qty;
+  const modal = document.getElementById('modal-stock');
+  const inputCantidad = document.getElementById('modal-cantidad');
 
-  const btnC = document.getElementById('btn-confirmar');
-  btnC.disabled    = true;
-  btnC.textContent = '⏳ Guardando…';
-
-  let error;
-
-  // 1. Actualizar stock en inventario_detalle
-  if (productoActivo.id_stock) {
-    ({ error } = await supabase
-      .from('inventario_detalle')
-      .update({ cantidad_disponible: nuevoStock })
-      .eq('id_stock', productoActivo.id_stock));
-  } else if (productoActivo._prodId) {
-    // Actualizar en tabla productos directamente
-    ({ error } = await supabase
-      .from('productos')
-      .update({ stock: nuevoStock })
-      .eq('id_producto', productoActivo._prodId));
+  window.abrirModal = function (idStock, nombreProducto, cantidadActual) {
+    itemSeleccionado = idStock;
+    document.getElementById('modal-titulo').textContent = `Actualizar: ${nombreProducto}`;
+    document.getElementById('modal-desc').textContent = `Cantidad actual: ${cantidadActual} unidades`;
+    inputCantidad.value = cantidadActual;
+    modal.style.display = 'flex';
+    inputCantidad.focus();
   }
 
-  if (error) {
-    showToast('Error al actualizar stock: ' + error.message, 'error');
-    btnC.disabled = false;
-    actualizarUISegunModo();
-    return;
-  }
-
-  // 2. Registrar en historial
-  const prod = productoActivo.productos;
-  await supabase.from('movimientos_inventario').insert({
-    id_stock:       productoActivo.id_stock,
-    id_producto:    prod?.id_producto || productoActivo._prodId,
-    tipo_movimiento: modoActual,
-    cantidad:       qty,
-    stock_anterior: stockAnt,
-    stock_nuevo:    nuevoStock,
-    nota:           nota || null,
-    operador:       nombreUsuario,
-    created_at:     new Date().toISOString(),
-  }).then(() => {}); // no blocking si falla
-
-  // 3. Feedback visual
-  const msgs = {
-    entrada: `✅ Entrada registrada: +${qty} u. → Stock: ${nuevoStock}`,
-    salida:  `📤 Salida registrada: −${qty} u. → Stock: ${nuevoStock}`,
-    ajuste:  `🔧 Ajuste guardado: Stock ajustado a ${nuevoStock} u.`,
-  };
-  const lastOp = document.getElementById('last-op');
-  lastOp.textContent   = msgs[modoActual];
-  lastOp.style.display = 'block';
-  lastOp.className     = '';
-  lastOp.style.background = modoActual === 'salida'
-    ? 'rgba(245,158,11,0.1)' : modoActual === 'ajuste'
-    ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)';
-  lastOp.style.border = `1px solid ${modoActual === 'salida' ? 'rgba(245,158,11,0.2)' : modoActual === 'ajuste' ? 'rgba(59,130,246,0.2)' : 'rgba(16,185,129,0.2)'}`;
-  lastOp.style.color  = modoActual === 'salida' ? '#fde68a' : modoActual === 'ajuste' ? '#93c5fd' : '#86efac';
-
-  showToast(msgs[modoActual].replace(/[✅📤🔧]/g,'').trim(), 'success');
-
-  // 4. Actualizar contadores
-  sesionContadores[modoActual]++;
-  actualizarContadores();
-
-  // 5. Limpiar para siguiente escaneo
-  setTimeout(() => {
-    limpiarEscaner();
-    document.getElementById('barcode-input').focus();
-  }, 1800);
-};
-
-function actualizarContadores() {
-  document.getElementById('cnt-entradas').textContent = sesionContadores.entrada;
-  document.getElementById('cnt-salidas').textContent  = sesionContadores.salida;
-  document.getElementById('cnt-ajustes').textContent  = sesionContadores.ajuste;
-  document.getElementById('cnt-total').textContent    =
-    sesionContadores.entrada + sesionContadores.salida + sesionContadores.ajuste;
-}
-
-window.limpiarEscaner = () => {
-  document.getElementById('barcode-input').value = '';
-  limpiarResultadoEscaner();
-};
-
-function limpiarResultadoEscaner() {
-  document.getElementById('product-card').classList.remove('visible','entrada','salida','ajuste');
-  document.getElementById('product-not-found').classList.remove('visible');
-  document.getElementById('nota-op').value = '';
-  document.getElementById('qty-input').value = 1;
-  document.getElementById('pf-resultado').textContent = '—';
-  productoActivo = null;
-  const btnC = document.getElementById('btn-confirmar');
-  btnC.disabled = false;
-  actualizarUISegunModo();
-}
-
-// Enter en el input de barcode = buscar
-document.getElementById('barcode-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') buscarProducto();
-});
-
-// ────────────────────────────────────────────
-// INVENTARIO COMPLETO (Tab 2)
-// ────────────────────────────────────────────
-window.cargarInventario = async function () {
-  const tabla = document.getElementById('tabla-stock');
-  tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando...</td></tr>`;
-
-  const { data, error } = await supabase
-    .from('inventario_detalle')
-    .select(`id_stock, cantidad_disponible, stock_critico, productos(id_producto, nombre), sucursales(nombre)`);
-
-  if (error || !data) {
-    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger);">Error: ${error?.message || 'sin datos'}</td></tr>`;
-    return;
-  }
-  todosItems = data;
-
-  const criticos = data.filter(i => i.cantidad_disponible <= i.stock_critico).length;
-  const alertaEl = document.getElementById('alerta-critico');
-  alertaEl.style.display = criticos > 0 ? 'flex' : 'none';
-  document.getElementById('alerta-count').textContent = criticos;
-
-  renderTabla(data);
-};
-
-function renderTabla(items) {
-  const tabla = document.getElementById('tabla-stock');
-  if (!items?.length) {
-    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No hay registros.</td></tr>`;
-    return;
-  }
-  tabla.innerHTML = items.map(item => {
-    const esCritico  = item.cantidad_disponible <= item.stock_critico;
-    const nombreProd = (item.productos?.nombre || '—').replace(/'/g, "\\'");
-    return `<tr>
-      <td><strong>${item.productos?.nombre || '—'}</strong></td>
-      <td style="color:var(--text-muted);">${item.sucursales?.nombre || '—'}</td>
-      <td><strong style="color:${esCritico?'var(--danger)':'var(--text)'};">${item.cantidad_disponible}</strong></td>
-      <td style="color:var(--text-muted);">${item.stock_critico}</td>
-      <td>${esCritico
-        ? '<span class="badge badge-danger">⚠ CRÍTICO</span>'
-        : '<span class="badge badge-success">Normal</span>'
-      }</td>
-      <td>
-        <button class="btn btn-outline btn-sm"
-          onclick="abrirModalStock(${item.id_stock}, '${nombreProd}', ${item.cantidad_disponible})">
-          Actualizar
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-window.aplicarFiltros = () => {
-  const q      = document.getElementById('buscador').value.toLowerCase();
-  const estado = document.getElementById('filtro-estado').value;
-  renderTabla(todosItems.filter(i => {
-    const nom       = (i.productos?.nombre || '').toLowerCase();
-    const matchQ    = nom.includes(q);
-    const matchEst  = !estado
-      || (estado === 'critico' && i.cantidad_disponible <= i.stock_critico)
-      || (estado === 'normal'  && i.cantidad_disponible > i.stock_critico);
-    return matchQ && matchEst;
-  }));
-};
-
-// Modal inventario
-window.abrirModalStock = (idStock, nombreProducto, cantidadActual) => {
-  itemSeleccionado = idStock;
-  document.getElementById('modal-titulo').textContent = `Actualizar: ${nombreProducto}`;
-  document.getElementById('modal-desc').textContent   = `Cantidad actual: ${cantidadActual} unidades`;
-  document.getElementById('modal-cantidad').value     = cantidadActual;
-  document.getElementById('modal-stock').classList.add('open');
-};
-window.cerrarModalStock = () => {
-  document.getElementById('modal-stock').classList.remove('open');
-  itemSeleccionado = null;
-};
-window.confirmarActualizarStock = async () => {
-  const nuevaCantidad = parseInt(document.getElementById('modal-cantidad').value);
-  if (isNaN(nuevaCantidad) || nuevaCantidad < 0) { showToast('Ingresa una cantidad válida','error'); return; }
-  const { error } = await supabase
-    .from('inventario_detalle')
-    .update({ cantidad_disponible: nuevaCantidad })
-    .eq('id_stock', itemSeleccionado);
-  if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  showToast('Stock actualizado correctamente','success');
-  cerrarModalStock();
-  cargarInventario();
-};
-
-// ────────────────────────────────────────────
-// HISTORIAL (Tab 3)
-// ────────────────────────────────────────────
-async function cargarHistorial() {
-  const tbody = document.getElementById('tabla-historial');
-  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Cargando historial…</td></tr>`;
-
-  const { data, error } = await supabase
-    .from('movimientos_inventario')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(300);
-
-  if (error) {
-    // Si la tabla no existe aún, mostrar instrucción SQL
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">
-      La tabla <code>movimientos_inventario</code> aún no existe. Ejecuta el SQL indicado en las instrucciones.
-    </td></tr>`;
-    return;
-  }
-
-  todosHistorial = data || [];
-  const badge = document.getElementById('badge-movs');
-  badge.textContent  = todosHistorial.length;
-  badge.style.display = todosHistorial.length > 0 ? 'inline' : 'none';
-
-  renderHistorial(todosHistorial);
-}
-
-function renderHistorial(lista) {
-  const tbody = document.getElementById('tabla-historial');
-  document.getElementById('hist-count').textContent = `${lista.length} registro(s)`;
-
-  if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">Sin movimientos registrados.</td></tr>`;
-    return;
-  }
-
-  const tipoConfig = {
-    entrada: { label:'📥 Entrada', cls:'mov-entrada' },
-    salida:  { label:'📤 Salida',  cls:'mov-salida'  },
-    ajuste:  { label:'🔧 Ajuste',  cls:'mov-ajuste'  },
-  };
-
-  tbody.innerHTML = lista.map((m, idx) => {
-    const cfg   = tipoConfig[m.tipo_movimiento] || { label: m.tipo_movimiento, cls: '' };
-    const fecha = m.created_at ? new Date(m.created_at).toLocaleString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
-    const diff  = m.tipo_movimiento === 'entrada'
-      ? `<span style="color:#10b981;">+${m.cantidad}</span>`
-      : m.tipo_movimiento === 'salida'
-      ? `<span style="color:#f59e0b;">−${m.cantidad}</span>`
-      : `<span style="color:#3b82f6;">→ ${m.cantidad}</span>`;
-
-    return `<tr>
-      <td style="color:var(--text-muted);">${lista.length - idx}</td>
-      <td style="font-size:0.8rem;color:var(--text-muted);">${fecha}</td>
-      <td><strong>${m.nombre_producto || m.id_producto || '—'}</strong></td>
-      <td><span class="mov-badge ${cfg.cls}">${cfg.label}</span></td>
-      <td style="font-weight:700;">${diff}</td>
-      <td style="color:var(--text-muted);">${m.stock_anterior ?? '—'}</td>
-      <td style="font-weight:700;">${m.stock_nuevo ?? '—'}</td>
-      <td style="font-size:0.82rem;">${m.operador || '—'}</td>
-      <td style="font-size:0.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.nota || '—'}</td>
-    </tr>`;
-  }).join('');
-}
-
-window.filtrarHistorial = () => {
-  const q     = document.getElementById('hist-search').value.toLowerCase();
-  const tipo  = document.getElementById('hist-tipo').value;
-  const fecha = document.getElementById('hist-fecha').value;
-
-  renderHistorial(todosHistorial.filter(m => {
-    const prod   = (m.nombre_producto || String(m.id_producto || '')).toLowerCase();
-    const matchQ = !q    || prod.includes(q);
-    const matchT = !tipo || m.tipo_movimiento === tipo;
-    const matchF = !fecha || (m.created_at && m.created_at.startsWith(fecha));
-    return matchQ && matchT && matchF;
-  }));
-};
-
-window.limpiarFiltrosHistorial = () => {
-  document.getElementById('hist-search').value = '';
-  document.getElementById('hist-tipo').value   = '';
-  document.getElementById('hist-fecha').value  = '';
-  renderHistorial(todosHistorial);
-};
-
-// ────────────────────────────────────────────
-// MODAL: NUEVO PRODUCTO
-// ────────────────────────────────────────────
-window.abrirModalNuevoProducto = () => {
-  document.getElementById('modal-nuevo-producto').classList.add('open');
-};
-window.cerrarModalNuevoProducto = () => {
-  document.getElementById('modal-nuevo-producto').classList.remove('open');
-};
-window.guardarNuevoProducto = async () => {
-  const nombre   = document.getElementById('np-nombre').value.trim();
-  const barcode  = document.getElementById('np-barcode').value.trim();
-  const stock    = parseInt(document.getElementById('np-stock').value) || 0;
-  const critico  = parseInt(document.getElementById('np-critico').value) || 10;
-  const precio   = parseFloat(document.getElementById('np-precio').value) || 0;
-  const categoria = document.getElementById('np-categoria').value.trim();
-  const descripcion = document.getElementById('np-descripcion').value.trim();
-
-  if (!nombre)  { showToast('El nombre es obligatorio','error'); return; }
-  if (!barcode) { showToast('El código de barras es obligatorio','error'); return; }
-
-  // 1. Insertar en productos
-  const { data: prod, error: errProd } = await supabase
-    .from('productos')
-    .insert({ nombre, codigo_barras: barcode, precio_venta_actual: parseFloat(document.getElementById('np-precio').value)||0, categoria, descripcion, stock })
-    .select()
-    .single();
-
-  if (errProd) { showToast('Error al crear producto: ' + errProd.message, 'error'); return; }
-
-  // 2. Insertar en inventario_detalle (sucursal 1 por defecto)
-  await supabase.from('inventario_detalle').insert({
-    id_producto:         prod.id_producto,
-    cantidad_disponible: stock,
-    stock_critico:       critico,
-    id_sucursal:         1,
+  document.getElementById('modal-cancel').addEventListener('click', () => {
+    modal.style.display = 'none';
+    itemSeleccionado = null;
   });
 
-  showToast(`Producto "${nombre}" registrado ✅`, 'success');
-  cerrarModalNuevoProducto();
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      itemSeleccionado = null;
+    }
+  });
+
+  document.getElementById('modal-confirm').addEventListener('click', async () => {
+    const nuevaCantidad = parseInt(inputCantidad.value);
+    if (isNaN(nuevaCantidad) || nuevaCantidad < 0) {
+      showToast('Ingresa una cantidad válida', 'error');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('inventario_detalle')
+      .update({ cantidad_disponible: nuevaCantidad })
+      .eq('id_stock', itemSeleccionado);
+
+    if (error) {
+      showToast('Error: ' + error.message, 'error');
+    } else {
+      showToast('Stock actualizado correctamente', 'success');
+      modal.style.display = 'none';
+      itemSeleccionado = null;
+      cargarInventario();
+    }
+  });
+
   cargarInventario();
-
-  // Pre-llenar el escáner con el nuevo código
-  document.getElementById('barcode-input').value = barcode;
-  switchTab('scanner', document.querySelector('.page-tab'));
-  document.querySelectorAll('.page-tab')[0].classList.add('active');
-};
-
-// ────────────────────────────────────────────
-// Init: cargar inventario y contadores del día
-// ────────────────────────────────────────────
-cargarInventario();
-
-// Cargar contadores del día desde historial
-(async () => {
-  const hoy = new Date().toISOString().split('T')[0];
-  const { data } = await supabase
-    .from('movimientos_inventario')
-    .select('tipo_movimiento')
-    .gte('created_at', hoy + 'T00:00:00')
-    .eq('operador', nombreUsuario);
-
-  if (data) {
-    data.forEach(m => {
-      if (sesionContadores[m.tipo_movimiento] !== undefined)
-        sesionContadores[m.tipo_movimiento]++;
-    });
-    actualizarContadores();
-  }
-})();
-
-// Focus automático en el input de barcode
-document.getElementById('barcode-input').focus();
 </script>
 </body>
 </html>
