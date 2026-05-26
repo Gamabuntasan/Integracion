@@ -1,227 +1,249 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultado del Pago — Medistock</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultado del Pago — Medistock</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
-        <div class="card" style="max-width:520px; width:100%; text-align:center;">
-            <div class="card-body" style="padding:2.5rem;">
-                <div id="resultado-icono" style="font-size:4rem; margin-bottom:1rem;">⏳</div>
-                <h2 id="resultado-titulo" style="margin-bottom:0.5rem;">Verificando pago...</h2>
-                <p id="resultado-desc" style="color:var(--text-muted); margin-bottom:1.5rem;"></p>
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
+  <div class="card" style="max-width:520px; width:100%; text-align:center;">
+    <div class="card-body" style="padding:2.5rem;">
+      <div id="resultado-icono" style="font-size:4rem; margin-bottom:1rem;">⏳</div>
+      <h2 id="resultado-titulo" style="margin-bottom:0.5rem;">Verificando pago...</h2>
+      <p id="resultado-desc" style="color:var(--text-muted); margin-bottom:1.5rem;"></p>
 
-                <!-- Detalle transacción -->
-                <div id="resultado-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; display:none; text-align:left;"></div>
+      <!-- Detalle transacción -->
+      <div id="resultado-detalle" style="background:var(--surface-2); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; display:none; text-align:left;"></div>
 
-                <!-- Tracking -->
-                <div id="tracking-box" style="display:none; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:var(--radius); padding:1.25rem; margin-bottom:1.5rem;">
-                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">
-                        Número de seguimiento
-                    </div>
-                    <div id="tracking-number" style="font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700; color:var(--success); letter-spacing:0.1em;"></div>
-                    <div id="tracking-tipo" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;"></div>
-                </div>
-
-                <div id="resultado-acciones"></div>
-            </div>
+      <!-- Tracking -->
+      <div id="tracking-box" style="display:none; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:var(--radius); padding:1.25rem; margin-bottom:1.5rem;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">
+          Número de seguimiento
         </div>
+        <div id="tracking-number" style="font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700; color:var(--success); letter-spacing:0.1em;"></div>
+        <div id="tracking-tipo" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;"></div>
+      </div>
+
+      <div id="resultado-acciones"></div>
     </div>
+  </div>
+</div>
 
-    <script type="module">
-        import { supabase } from './supabaseClient.js';
+<script type="module">
+  import { requireAuth } from './auth.js';
 
-        const SUPABASE_URL = 'https://ikeebacmdyobisrcysvr.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_Yb5P2e5VTqikB0H6cifwoA_0nIOZh6S';
-const MOCKAPI_URL = 'https://69e5507bce4e908a155e08e1.mockapi.io';
+  // ============================================================
+  // CONFIGURACIÓN — reemplaza con la URL real de tu backend Render
+  // ============================================================
+  const BACKEND_URL  = 'https://medistock-backend.onrender.com';
+  const SUPABASE_URL = 'https://ikeebacmdyobisrcysvr.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_Yb5P2e5VTqikB0H6cifwoA_0nIOZh6S';
+  const MOCKAPI_URL  = 'https://69e5507bce4e908a155e08e1.mockapi.io';
 
-        const params = new URLSearchParams(window.location.search);
-        const tokenWs = params.get('token_ws');
-        const tbkToken = params.get('TBK_TOKEN');
+  // Obtener sesión del usuario autenticado (JWT para el backend)
+  const auth = await requireAuth();
+  if (!auth) throw new Error('No autenticado');
+  const jwtToken = auth.session.access_token;
 
-        const iconoEl = document.getElementById('resultado-icono');
-        const tituloEl = document.getElementById('resultado-titulo');
-        const descEl = document.getElementById('resultado-desc');
-        const detalleEl = document.getElementById('resultado-detalle');
-        const trackingBox = document.getElementById('tracking-box');
-        const trackingNum = document.getElementById('tracking-number');
-        const trackingTipo = document.getElementById('tracking-tipo');
-        const accionesEl = document.getElementById('resultado-acciones');
+  const params    = new URLSearchParams(window.location.search);
+  const tokenWs   = params.get('token_ws');
+  const tbkToken  = params.get('TBK_TOKEN');
 
-        function mostrarError(msg) {
-            iconoEl.textContent = '❌';
-            tituloEl.textContent = 'Pago cancelado o fallido';
-            descEl.textContent = msg;
-            accionesEl.innerHTML = `<a href="checkout.html" class="btn btn-primary" style="display:inline-flex;">Volver al checkout</a>`;
+  const iconoEl   = document.getElementById('resultado-icono');
+  const tituloEl  = document.getElementById('resultado-titulo');
+  const descEl    = document.getElementById('resultado-desc');
+  const detalleEl = document.getElementById('resultado-detalle');
+  const trackingBox = document.getElementById('tracking-box');
+  const trackingNum = document.getElementById('tracking-number');
+  const trackingTipo = document.getElementById('tracking-tipo');
+  const accionesEl  = document.getElementById('resultado-acciones');
+
+  function mostrarError(msg) {
+    iconoEl.textContent = '❌';
+    tituloEl.textContent = 'Pago cancelado o fallido';
+    descEl.textContent = msg;
+    accionesEl.innerHTML = `<a href="checkout.html" class="btn btn-primary" style="display:inline-flex;">Volver al checkout</a>`;
+  }
+
+  async function generarTracking(idPedido, direccion, tipo) {
+    try {
+      const num      = `MS-${Date.now().toString().slice(-8)}`;
+      const estimado = tipo === 'express' ? '24 horas hábiles' : '3-5 días hábiles';
+      const res = await fetch(`${MOCKAPI_URL}/envios`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_pedido: idPedido,
+          tracking:  num,
+          tipo,
+          direccion,
+          estado:    'Pendiente de retiro',
+          estimado,
+          creado:    new Date().toISOString(),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { tracking: data.tracking || num, estimado };
+      }
+    } catch (e) {
+      console.warn('MockAPI no disponible, usando tracking local');
+    }
+    const num = `MS-${Date.now().toString().slice(-8)}`;
+    return { tracking: num, estimado: tipo === 'express' ? '24 horas hábiles' : '3-5 días hábiles' };
+  }
+
+  // ----------------------------------------------------------
+  // Caso 1: usuario canceló en Webpay
+  // ----------------------------------------------------------
+  if (tbkToken && !tokenWs) {
+    mostrarError('Cancelaste el pago en Webpay. Tu pedido no fue procesado.');
+
+  // ----------------------------------------------------------
+  // Caso 2: retorno con token válido → confirmar + registrar pedido
+  // ----------------------------------------------------------
+  } else if (tokenWs) {
+    try {
+      // 1) Confirmar transacción Webpay (sigue usando la Edge Function de Supabase
+      //    porque Webpay requiere confirm desde server-side con credenciales de comercio)
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/transbank-webpay`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ action: 'confirm', token: tokenWs }),
+      });
+      const tbkData = await response.json();
+
+      if (Number(tbkData.response_code) === 0) {
+        iconoEl.textContent = '✅';
+
+        const orderData      = JSON.parse(sessionStorage.getItem('webpay_order') || '{}');
+        const carrito        = orderData.carrito || [];
+        const total          = orderData.total || tbkData.amount;
+        const tipoDespacho   = orderData.tipoDespacho || 'normal';
+        const direccion      = orderData.direccion || '';
+        const costoDespacho  = orderData.costoDespacho || 0;
+
+        // 2) Mostrar detalle de la transacción
+        detalleEl.style.display = 'block';
+        detalleEl.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.875rem;">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Orden</span>
+              <strong>${tbkData.buy_order}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Autorización</span>
+              <strong>${tbkData.authorization_code}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Tarjeta</span>
+              <strong>**** ${tbkData.card_detail?.card_number || '****'}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Despacho</span>
+              <strong>${tipoDespacho === 'express' ? '⚡ Express (24hrs)' : 'Normal (3-5 días)'}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-muted);">Dirección</span>
+              <strong style="max-width:200px; text-align:right;">${direccion}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-top:0.5rem; border-top:1px solid var(--border);">
+              <span style="color:var(--text-muted);">Total pagado</span>
+              <strong style="color:var(--success);">$${Number(total).toLocaleString('es-CL')}</strong>
+            </div>
+          </div>`;
+
+        // ============================================================
+        // CORRECCIÓN IL3.1: registrar pedido a través del BACKEND
+        // (no insertar directo en Supabase — esto activa PedidoService
+        //  con validación de stock, reglas de negocio, etc.)
+        // ============================================================
+        const bodyPedido = {
+          items: carrito.map(item => ({
+            id_producto:     item.id_producto,
+            cantidad:        item.cantidad,
+            precio_unitario: item.precio_venta_actual,
+          })),
+          metodo_pago:       'webpay',
+          tipo_despacho:     tipoDespacho,
+          direccion_entrega: direccion,
+          costo_despacho:    costoDespacho,
+          total_pago:        total,
+          buy_order:         tbkData.buy_order,
+          authorization_code: tbkData.authorization_code,
+        };
+
+        const pedidoRes = await fetch(`${BACKEND_URL}/api/pedidos`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify(bodyPedido),
+        });
+
+        if (!pedidoRes.ok) {
+          const errData = await pedidoRes.json().catch(() => ({}));
+          // 409 = stock insuficiente (validación del PedidoService)
+          if (pedidoRes.status === 409) {
+            mostrarError(`Stock insuficiente: ${errData.message || 'uno o más productos no tienen stock suficiente.'}`);
+            return;
+          }
+          throw new Error(errData.message || `Error ${pedidoRes.status} al registrar pedido`);
         }
 
-        async function generarTracking(idPedido, direccion, tipo) {
-            try {
-                const num = `MS-${Date.now().toString().slice(-8)}`;
-                const estimado = tipo === 'express' ? '24 horas hábiles' : '3-5 días hábiles';
+        const pedido = await pedidoRes.json();
+        // El backend puede devolver { data: {...} } o el objeto directo
+        const pedidoData = pedido.data || pedido;
 
-                const res = await fetch(`${MOCKAPI_URL}/envios`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_pedido: idPedido,
-                        tracking: num,
-                        tipo,
-                        direccion,
-                        estado: 'Pendiente de retiro',
-                        estimado,
-                        creado: new Date().toISOString(),
-                    }),
-                });
+        // 3) Generar tracking via MockAPI
+        const { tracking, estimado } = await generarTracking(
+          pedidoData.id_pedido, direccion, tipoDespacho
+        );
 
-                if (res.ok) {
-                    const data = await res.json();
-                    return { tracking: data.tracking || num, estimado };
-                }
-            } catch (e) {
-                console.warn('MockAPI no disponible');
-            }
-            const num = `MS-${Date.now().toString().slice(-8)}`;
-            return {
-                tracking: num,
-                estimado: tipo === 'express' ? '24 horas hábiles' : '3-5 días hábiles'
-            };
-        }
+        // 4) Actualizar número de tracking en el backend
+        await fetch(`${BACKEND_URL}/api/pedidos/${pedidoData.id_pedido}/estado`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify({ tracking_number: tracking }),
+        }).catch(() => {}); // No crítico si falla
 
-        if (tbkToken && !tokenWs) {
-            mostrarError('Cancelaste el pago en Webpay. Tu pedido no fue procesado.');
-        } else if (tokenWs) {
-            try {
-                const response = await fetch(`${SUPABASE_URL}/functions/v1/transbank-webpay`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    },
-                    body: JSON.stringify({ action: 'confirm', token: tokenWs }),
-                });
+        // 5) Mostrar resultado al usuario
+        trackingBox.style.display = 'block';
+        trackingNum.textContent = tracking;
+        trackingTipo.textContent = `${tipoDespacho === 'express' ? '⚡ Express' : '📦 Normal'} — Entrega estimada: ${estimado}`;
 
-                const tbkData = await response.json();
+        tituloEl.textContent = `¡Pago exitoso! Orden #${String(pedidoData.id_pedido).padStart(5, '0')}`;
+        descEl.textContent = 'Tu pedido ha sido registrado. Guarda tu número de seguimiento.';
 
-                if (Number(tbkData.response_code) === 0) {
-                    iconoEl.textContent = '✅';
+        localStorage.removeItem('ms_carrito');
+        sessionStorage.removeItem('webpay_order');
 
-                    const orderData = JSON.parse(sessionStorage.getItem('webpay_order') || '{}');
-                    const carrito = orderData.carrito || [];
-                    const total = orderData.total || tbkData.amount;
-                    const tipoDespacho = orderData.tipoDespacho || 'normal';
-                    const direccion = orderData.direccion || '';
-                    const costoDespacho = orderData.costoDespacho || 0;
+        accionesEl.innerHTML = `
+          <a href="catalogo.html" class="btn btn-primary" style="display:inline-flex; margin-top:0.5rem;">
+            Seguir comprando
+          </a>`;
 
-                    // Detalle transacción
-                    detalleEl.style.display = 'block';
-                    detalleEl.innerHTML = `
-                        <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.875rem;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Orden</span>
-                                <strong>${tbkData.buy_order}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Autorización</span>
-                                <strong>${tbkData.authorization_code}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Tarjeta</span>
-                                <strong>**** ${tbkData.card_detail?.card_number || '****'}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Despacho</span>
-                                <strong>${tipoDespacho === 'express' ? '⚡ Express (24hrs)' : 'Normal (3-5 días)'}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:var(--text-muted);">Dirección</span>
-                                <strong style="max-width:200px; text-align:right;">${direccion}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding-top:0.5rem; border-top:1px solid var(--border);">
-                                <span style="color:var(--text-muted);">Total pagado</span>
-                                <strong style="color:var(--success);">$${Number(total).toLocaleString('es-CL')}</strong>
-                            </div>
-                        </div>`;
+      } else {
+        mostrarError(`Pago rechazado. Código: ${tbkData.response_code}. Intenta con otra tarjeta.`);
+      }
 
-                    // Registrar en Supabase
-                    const { data: usuarioData } = await supabase
-                        .from('usuarios')
-                        .select('id_usuario')
-                        .eq('email', orderData.email)
-                        .single();
+    } catch (err) {
+      mostrarError('Error al verificar el pago. Contacta al soporte.');
+      console.error(err);
+    }
 
-                    const { data: pedido } = await supabase
-                        .from('pedidos')
-                        .insert([{
-                            id_cliente: usuarioData?.id_usuario || null,
-                            id_canal: 1,
-                            id_sucursal_despacho: 1,
-                            estado_pedido: 'Pagado',
-                            total_pago: total,
-                            metodo_pago: 'webpay',
-                        }])
-                        .select()
-                        .single();
-
-                    if (pedido) {
-                        await supabase.from('detalle_pedido').insert(
-                            carrito.map(item => ({
-                                id_pedido: pedido.id_pedido,
-                                id_producto: item.id_producto,
-                                cantidad: item.cantidad,
-                                precio_unitario: item.precio_venta_actual,
-                            }))
-                        );
-
-                        for (const item of carrito) {
-                            await supabase.rpc('descontar_stock', {
-                                p_producto_id: item.id_producto,
-                                p_cantidad: item.cantidad,
-                            }).catch(e => console.warn('Stock:', e.message));
-                        }
-
-                        // Generar tracking
-                        const { tracking, estimado } = await generarTracking(
-                            pedido.id_pedido, direccion, tipoDespacho
-                        );
-
-                        // Guardar tracking en pedido
-                        await supabase
-                            .from('pedidos')
-                            .update({ tracking_number: tracking })
-                            .eq('id_pedido', pedido.id_pedido)
-                            .catch(() => {});
-
-                        // Mostrar tracking
-                        trackingBox.style.display = 'block';
-                        trackingNum.textContent = tracking;
-                        trackingTipo.textContent = `${tipoDespacho === 'express' ? '⚡ Express' : '📦 Normal'} — Entrega estimada: ${estimado}`;
-
-                        tituloEl.textContent = `¡Pago exitoso! Orden #${String(pedido.id_pedido).padStart(5,'0')}`;
-                        descEl.textContent = 'Tu pedido ha sido registrado. Guarda tu número de seguimiento.';
-                    }
-
-                    localStorage.removeItem('ms_carrito');
-                    sessionStorage.removeItem('webpay_order');
-
-                    accionesEl.innerHTML = `
-                        <a href="catalogo.html" class="btn btn-primary" style="display:inline-flex; margin-top:0.5rem;">
-                            Seguir comprando
-                        </a>`;
-
-                } else {
-                    mostrarError(`Pago rechazado. Código: ${tbkData.response_code}. Intenta con otra tarjeta.`);
-                }
-            } catch (err) {
-                mostrarError('Error al verificar el pago. Contacta al soporte.');
-                console.error(err);
-            }
-        } else {
-            mostrarError('No se recibió información del pago.');
-        }
-    </script>
+  } else {
+    mostrarError('No se recibió información del pago.');
+  }
+</script>
 </body>
 </html>
