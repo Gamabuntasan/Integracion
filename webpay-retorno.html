@@ -37,7 +37,7 @@
   // ============================================================
   // CONFIGURACIÓN — reemplaza con la URL real de tu backend Render
   // ============================================================
-  const BACKEND_URL  = 'https://medistock-backend.onrender.com';
+  const BACKEND_URL  = 'https://medistock-backend-3a71.onrender.com';
   const SUPABASE_URL = 'https://ikeebacmdyobisrcysvr.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_Yb5P2e5VTqikB0H6cifwoA_0nIOZh6S';
   const MOCKAPI_URL  = 'https://69e5507bce4e908a155e08e1.mockapi.io';
@@ -164,7 +164,7 @@
         //  con validación de stock, reglas de negocio, etc.)
         // ============================================================
         const bodyPedido = {
-          items: carrito.map(item => ({
+          detalles: carrito.map(item => ({
             id_producto:     item.id_producto,
             cantidad:        item.cantidad,
             precio_unitario: item.precio_venta_actual,
@@ -207,7 +207,7 @@
         );
 
         // 4) Actualizar número de tracking en el backend
-        await fetch(`${BACKEND_URL}/api/pedidos/${pedidoData.id_pedido}/estado`, {
+        await fetch(`${BACKEND_URL}/api/pedidos/${pedidoData.id_pedido}/tracking`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
