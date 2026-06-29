@@ -2,14 +2,18 @@ import { supabase } from './supabaseClient.js';
 
 // ── Si ya hay sesión activa, redirigir directo ──
 (async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-        const { data: usuario } = await supabase
-            .from('usuarios')
-            .select('rol_id, nombre')
-            .eq('email', session.user.email)
-            .single();
-        if (usuario) redirigirSegunRol(usuario.rol_id, usuario.nombre);
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            const { data: usuario } = await supabase
+                .from('usuarios')
+                .select('rol_id, nombre')
+                .eq('id_usuario', session.user.id)
+                .single();
+            if (usuario) redirigirSegunRol(usuario.rol_id, usuario.nombre);
+        }
+    } catch (err) {
+        console.error('Error al verificar sesión activa:', err);
     }
 })();
 
@@ -42,7 +46,7 @@ loginForm.addEventListener('submit', async (e) => {
     const { data: usuario, error: userError } = await supabase
         .from('usuarios')
         .select('rol_id, nombre')
-        .eq('email', email)
+        .eq('id_usuario', data.user.id)
         .single();
 
     if (userError || !usuario) {
@@ -75,6 +79,16 @@ registerForm.addEventListener('submit', async (e) => {
     const email    = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
 
+    if (!nombre || !apellido || !rut || !email || !password) {
+        mostrarMsg(msgRegister, 'Todos los campos son obligatorios.', 'error');
+        return;
+    }
+
+    if (password.length < 6) {
+        mostrarMsg(msgRegister, 'La contraseña debe tener al menos 6 caracteres.', 'error');
+        return;
+    }
+
     btnRegister.disabled = true;
     btnRegister.innerHTML = '<span class="spinner"></span> Creando cuenta...';
     msgRegister.innerHTML = '';
@@ -94,9 +108,17 @@ registerForm.addEventListener('submit', async (e) => {
     }
 
     // 2. Insertar en tabla usuarios con rol_id = 4 (Cliente por defecto)
+    // Usamos authData.user.id como id_usuario para mantener consistencia con Supabase Auth
     const { error: dbError } = await supabase
         .from('usuarios')
-        .insert([{ rut, nombre, apellido, email, rol_id: 4 }]);
+        .insert([{
+            id_usuario: authData.user.id,
+            rut,
+            nombre,
+            apellido,
+            email,
+            rol_id: 4
+        }]);
 
     if (dbError) {
         mostrarMsg(msgRegister, `Error al guardar perfil: ${dbError.message}`, 'error');
@@ -116,16 +138,18 @@ registerForm.addEventListener('submit', async (e) => {
 // Admin (1) y Ejecutivo (3) → verificacion → ejecutivo
 // Logística (2)             → terminal-logistica
 // Cliente (4) y CM (5)      → catalogo
+// Finanzas (6)              → finanzas
 // ══════════════════════════════════════════
 function redirigirSegunRol(rolId, nombre) {
-    if (rolId === 1 || rolId === 3) {
-        window.location.href = 'verificacion.html';
-    } else if (rolId === 2) {
-        window.location.href = 'terminal-logistica.html';
-    } else {
-        // Cliente y CM van al catálogo
-        window.location.href = 'catalogo.html';
-    }
+    const destinos = {
+        1: 'verificacion.html',
+        2: 'terminal-logistica.html',
+        3: 'verificacion.html',
+        4: 'catalogo.html',
+        5: 'catalogo.html',
+        6: 'finanzas.html',
+    };
+    window.location.href = destinos[rolId] || 'catalogo.html';
 }
 
 function mostrarMsg(el, texto, tipo) {
