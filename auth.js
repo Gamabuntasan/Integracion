@@ -6,31 +6,38 @@ import { supabase } from './supabaseClient.js';
  * @param {number[]} rolesPermitidos - Array de rol_id permitidos. Vacío = cualquier rol.
  */
 export async function requireAuth(rolesPermitidos = []) {
-    const { data: { session } } = await supabase.auth.getSession();
+    try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    if (!session) {
+        if (sessionError || !session) {
+            window.location.href = 'index.html';
+            return null;
+        }
+
+        const { data: usuario, error: usuarioError } = await supabase
+            .from('usuarios')
+            .select('rol_id, nombre')
+            .eq('id_usuario', session.user.id)
+            .single();
+
+        if (usuarioError || !usuario) {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+            return null;
+        }
+
+        if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(usuario.rol_id)) {
+            redirigirSegunRol(usuario.rol_id);
+            return null;
+        }
+
+        return { session, usuario };
+
+    } catch (err) {
+        console.error('Error en requireAuth:', err);
         window.location.href = 'index.html';
         return null;
     }
-
-    const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('rol_id, nombre')
-        .eq('email', session.user.email)
-        .single();
-
-    if (!usuario) {
-        await supabase.auth.signOut();
-        window.location.href = 'index.html';
-        return null;
-    }
-
-    if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(usuario.rol_id)) {
-        redirigirSegunRol(usuario.rol_id);
-        return null;
-    }
-
-    return { session, usuario };
 }
 
 /**
@@ -67,7 +74,7 @@ export function showToast(msg, type = 'info') {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${msg}`;
