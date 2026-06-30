@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { redirigirSegunRol } from './auth.js';
 
 // ── Si ya hay sesión activa, redirigir directo ──
 (async () => {
@@ -8,9 +9,9 @@ import { supabase } from './supabaseClient.js';
             const { data: usuario } = await supabase
                 .from('usuarios')
                 .select('rol_id, nombre')
-                .eq('id_usuario', session.user.id)
+                .eq('auth_user_id', session.user.id)
                 .single();
-            if (usuario) redirigirSegunRol(usuario.rol_id, usuario.nombre);
+            if (usuario) redirigirSegunRol(usuario.rol_id);
         }
     } catch (err) {
         console.error('Error al verificar sesión activa:', err);
@@ -46,7 +47,7 @@ loginForm.addEventListener('submit', async (e) => {
     const { data: usuario, error: userError } = await supabase
         .from('usuarios')
         .select('rol_id, nombre')
-        .eq('id_usuario', data.user.id)
+        .eq('auth_user_id', data.user.id)
         .single();
 
     if (userError || !usuario) {
@@ -60,7 +61,7 @@ loginForm.addEventListener('submit', async (e) => {
     sessionStorage.setItem('usuario_rol', usuario.rol_id);
 
     mostrarMsg(msgLogin, 'Acceso verificado. Redirigiendo...', 'success');
-    setTimeout(() => redirigirSegunRol(usuario.rol_id, usuario.nombre), 1200);
+    setTimeout(() => redirigirSegunRol(usuario.rol_id), 1200);
 });
 
 // ══════════════════════════════════════════
@@ -107,17 +108,17 @@ registerForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    // 2. Insertar en tabla usuarios con rol_id = 4 (Cliente por defecto)
-    // Usamos authData.user.id como id_usuario para mantener consistencia con Supabase Auth
+    // 2. Insertar en tabla usuarios vinculando auth_user_id
     const { error: dbError } = await supabase
         .from('usuarios')
         .insert([{
-            id_usuario: authData.user.id,
+            auth_user_id: authData.user.id,
             rut,
             nombre,
             apellido,
             email,
-            rol_id: 4
+            rol_id: 4,
+            activo: true
         }]);
 
     if (dbError) {
@@ -132,25 +133,6 @@ registerForm.addEventListener('submit', async (e) => {
     btnRegister.disabled = false;
     registerForm.reset();
 });
-
-// ══════════════════════════════════════════
-// REDIRECCIÓN POR ROL
-// Admin (1) y Ejecutivo (3) → verificacion → ejecutivo
-// Logística (2)             → terminal-logistica
-// Cliente (4) y CM (5)      → catalogo
-// Finanzas (6)              → finanzas
-// ══════════════════════════════════════════
-function redirigirSegunRol(rolId, nombre) {
-    const destinos = {
-        1: 'verificacion.html',
-        2: 'terminal-logistica.html',
-        3: 'verificacion.html',
-        4: 'catalogo.html',
-        5: 'catalogo.html',
-        6: 'finanzas.html',
-    };
-    window.location.href = destinos[rolId] || 'catalogo.html';
-}
 
 function mostrarMsg(el, texto, tipo) {
     const clases = { error: 'msg-error', success: 'msg-success', info: 'msg-info' };
