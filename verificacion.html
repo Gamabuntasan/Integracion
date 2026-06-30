@@ -49,9 +49,9 @@
     </div>
 
     <script type="module">
-        import { requireAuth, cerrarSesion, showToast } from './auth.js';
+        import { supabase } from './supabaseClient.js';
+        import { requireAuth, showToast } from './auth.js';
 
-        // Verificar que haya sesión activa (roles 1 y 3)
         const auth = await requireAuth([1, 3]);
         if (!auth) throw new Error('Sin sesión');
 
@@ -59,13 +59,26 @@
         const btnVerify = document.getElementById('btn-verify');
         const messageArea = document.getElementById('message');
 
-        // CÓDIGO DE DEMO: En producción esto vendría del servidor / TOTP
-        const DEMO_CODE = '123456';
+        // ── Enviar OTP real al correo del usuario ──
+        async function enviarOTP() {
+            const email = auth.session.user.email;
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: { shouldCreateUser: false }
+            });
+            if (error) {
+                showToast('Error al enviar código: ' + error.message, 'error');
+            } else {
+                showToast('Código enviado a ' + email, 'success');
+            }
+        }
 
-        // Auto-focus y navegación entre dígitos
+        // Enviar código al cargar la página
+        await enviarOTP();
+
+        // ── Auto-focus y navegación entre dígitos ──
         inputs.forEach((input, idx) => {
-            input.addEventListener('input', (e) => {
-                // Solo permitir números
+            input.addEventListener('input', () => {
                 input.value = input.value.replace(/\D/g, '');
                 if (input.value && idx < inputs.length - 1) {
                     inputs[idx + 1].focus();
@@ -79,9 +92,9 @@
                 }
             });
 
-            // Pegar código completo
             input.addEventListener('paste', (e) => {
-                const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                const pasted = (e.clipboardData || window.clipboardData)
+                    .getData('text').replace(/\D/g, '');
                 if (pasted.length === 6) {
                     e.preventDefault();
                     inputs.forEach((inp, i) => inp.value = pasted[i] || '');
@@ -96,28 +109,42 @@
             btnVerify.disabled = code.length < 6;
         }
 
-        btnVerify.addEventListener('click', () => {
+        // ── Verificar OTP real contra Supabase ──
+        btnVerify.addEventListener('click', async () => {
             const code = Array.from(inputs).map(i => i.value).join('');
+            const email = auth.session.user.email;
 
-            if (code === DEMO_CODE) {
-                messageArea.innerHTML = '<span style="color: var(--success);">✓ Identidad verificada correctamente</span>';
-                btnVerify.disabled = true;
+            btnVerify.disabled = true;
+            btnVerify.innerHTML = '<span class="spinner"></span> Verificando...';
 
+            const { error } = await supabase.auth.verifyOtp({
+                email,
+                token: code,
+                type: 'email'
+            });
+
+            if (error) {
+                messageArea.innerHTML =
+                    '<span style="color: var(--danger);">✕ Código incorrecto. Inténtalo nuevamente.</span>';
+                inputs.forEach(i => i.value = '');
+                inputs[0].focus();
+                btnVerify.disabled = false;
+                btnVerify.innerHTML = 'Verificar Identidad';
+            } else {
+                messageArea.innerHTML =
+                    '<span style="color: var(--success);">✓ Identidad verificada correctamente</span>';
                 const rolId = parseInt(sessionStorage.getItem('usuario_rol')) || 1;
                 setTimeout(() => {
                     window.location.href = rolId === 1 ? 'ejecutivo.html' : 'ejecutivo.html';
                 }, 1500);
-            } else {
-                messageArea.innerHTML = '<span style="color: var(--danger);">✕ Código incorrecto. Inténtalo nuevamente.</span>';
-                inputs.forEach(i => i.value = '');
-                inputs[0].focus();
             }
         });
 
+        // ── Reenviar código con cooldown ──
         async function reenviarCodigo() {
             const btn = document.getElementById('btn-resend');
             btn.disabled = true;
-            showToast('Código reenviado a tu correo', 'success');
+            await enviarOTP();
             let count = 30;
             const interval = setInterval(() => {
                 btn.textContent = `Reenviar (${count}s)`;
@@ -129,9 +156,7 @@
             }, 1000);
         }
 
-        // Exponer para el onclick del HTML
         window.reenviarCodigo = reenviarCodigo;
-
         inputs[0].focus();
     </script>
 </body>
