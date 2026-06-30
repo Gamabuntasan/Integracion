@@ -17,7 +17,7 @@ export async function requireAuth(rolesPermitidos = []) {
         const { data: usuario, error: usuarioError } = await supabase
             .from('usuarios')
             .select('rol_id, nombre')
-            .eq('id_usuario', session.user.id)
+            .eq('auth_user_id', session.user.id)
             .single();
 
         if (usuarioError || !usuario) {
@@ -42,9 +42,9 @@ export async function requireAuth(rolesPermitidos = []) {
 
 /**
  * Redirige al panel correcto según el rol
- * 1 = Admin       → verificacion → ejecutivo
+ * 1 = Admin       → verificacion
  * 2 = Logística   → terminal-logistica
- * 3 = Ejecutivo   → verificacion → ejecutivo
+ * 3 = Ejecutivo   → verificacion
  * 4 = Cliente     → catalogo
  * 5 = CM          → catalogo
  * 6 = Finanzas    → finanzas
