@@ -1,11 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { requireAuth, cerrarSesion, showToast } from './auth.js';
 
-const SUPABASE_URL = 'https://ikeebacmdyobisrcysvr.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Yb5P2e5VTqikB0H6cifwoA_0nIOZh6S';
-
-// MockAPI para simulación de logística/tracking
-// Puedes crear tu propio en https://mockapi.io — reemplaza esta URL
 const MOCKAPI_URL = 'https://69e5507bce4e908a155e08e1.mockapi.io';
 
 const auth = await requireAuth();
@@ -56,7 +51,7 @@ function renderResumen() {
     }
 
     document.getElementById('items-count').textContent =
-        `${carrito.reduce((s,i) => s+i.cantidad, 0)} productos`;
+        `${carrito.reduce((s, i) => s + i.cantidad, 0)} productos`;
 
     resumenEl.innerHTML = carrito.map(item => `
         <div class="cart-item">
@@ -81,13 +76,29 @@ function renderResumen() {
 
 renderResumen();
 
+// ── Validar stock antes de pagar ──
+async function validarStock() {
+    for (const item of carrito) {
+        const { data, error } = await supabase
+            .from('inventario_detalle')
+            .select('cantidad_disponible')
+            .eq('id_producto', item.id_producto)
+            .single();
+
+        if (error || !data || data.cantidad_disponible < item.cantidad) {
+            showToast(`Stock insuficiente para: ${item.nombre}`, 'error');
+            return false;
+        }
+    }
+    return true;
+}
+
 // ── Generar número de tracking via MockAPI ──
 async function generarTracking(idPedido, direccion) {
     try {
         const trackingNum = `MS-${Date.now().toString().slice(-8)}`;
         const estimado = tipoDespacho === 'express' ? '24 horas' : '3-5 días hábiles';
 
-        // Intentar crear en MockAPI (simulador de courier)
         const res = await fetch(`${MOCKAPI_URL}/envios`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -110,7 +121,6 @@ async function generarTracking(idPedido, direccion) {
         console.warn('MockAPI no disponible, usando tracking local:', e.message);
     }
 
-    // Fallback: tracking generado localmente
     return `MS-${Date.now().toString().slice(-8)}`;
 }
 
@@ -120,8 +130,18 @@ btnPagar.addEventListener('click', async () => {
     if (!direccion || carrito.length === 0) return;
 
     btnPagar.disabled = true;
-    btnPagar.innerHTML = '<span class="spinner"></span> Conectando con Webpay...';
+    btnPagar.innerHTML = '<span class="spinner"></span> Verificando stock...';
     statusEl.innerHTML = '';
+
+    // Validar stock antes de proceder
+    const stockOk = await validarStock();
+    if (!stockOk) {
+        btnPagar.disabled = false;
+        btnPagar.innerHTML = '🔒 Pagar con Webpay';
+        return;
+    }
+
+    btnPagar.innerHTML = '<span class="spinner"></span> Conectando con Webpay...';
 
     const subtotal = carrito.reduce((s, i) => s + Number(i.precio_venta_actual) * i.cantidad, 0);
     const costo = COSTOS_DESPACHO[tipoDespacho];
@@ -131,7 +151,7 @@ btnPagar.addEventListener('click', async () => {
     const sessionId = `SES-${auth.session.user.id.substring(0, 8)}`;
     const returnUrl = `${window.location.origin}/webpay-retorno.html`;
 
-    // Guardar datos completos del pedido para después del pago
+    // Guardar datos del pedido para después del pago
     sessionStorage.setItem('webpay_order', JSON.stringify({
         buyOrder, total, subtotal,
         carrito, tipoDespacho, direccion,
@@ -141,26 +161,34 @@ btnPagar.addEventListener('click', async () => {
     }));
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/transbank-webpay`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            },
-            body: JSON.stringify({
-                action: 'create',
-                buyOrder,
-                sessionId,
-                amount: total,
-                returnUrl,
-            }),
-        });
+        // Usar el token del usuario autenticado en vez de la anon key
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch(
+            'https://ikeebacmdyobisrcysvr.supabase.co/functions/v1/transbank-webpay',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    action: 'create',
+                    buyOrder,
+                    sessionId,
+                    amount: total,
+                    returnUrl,
+                }),
+            }
+        );
 
         const data = await response.json();
-
         if (data.error) throw new Error(JSON.stringify(data.error));
 
-        statusEl.innerHTML = `<div class="msg-info" style="padding:0.75rem; border-radius:var(--radius);">Redirigiendo a Webpay...</div>`;
+        statusEl.innerHTML = `
+            <div class="msg-info" style="padding:0.75rem; border-radius:var(--radius);">
+                Redirigiendo a Webpay...
+            </div>`;
 
         const form = document.createElement('form');
         form.method = 'POST';
@@ -174,11 +202,13 @@ btnPagar.addEventListener('click', async () => {
         form.submit();
 
     } catch (err) {
-        statusEl.innerHTML = `<div class="msg-error" style="padding:0.75rem; border-radius:var(--radius);">✕ Error: ${err.message}</div>`;
+        statusEl.innerHTML = `
+            <div class="msg-error" style="padding:0.75rem; border-radius:var(--radius);">
+                ✕ Error: ${err.message}
+            </div>`;
         btnPagar.disabled = false;
         btnPagar.innerHTML = '🔒 Pagar con Webpay';
     }
 });
 
-// Exportar para webpay-retorno.html
 window.generarTracking = generarTracking;
